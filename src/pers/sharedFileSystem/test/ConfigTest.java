@@ -13,7 +13,7 @@ public class ConfigTest {
 
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-
+		System.out.println("hello world");
 		// Pattern pattern = Pattern.compile("([\\d]+\\.){3}[\\d]+");
 		// Matcher matcher = pattern.matcher("127.0.0.1:8080\\d:\\hello");
 		// if (matcher.find()) {
