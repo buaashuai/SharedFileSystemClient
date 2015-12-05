@@ -62,9 +62,11 @@ public class FTPUtil {
 		if (type)
 			return getFTPClient(serverNode.Ip, serverNode.Port,
 					serverNode.UserName, serverNode.Password);
+
 		FTPClient ftpClient = FTPCLIENT.get(serverNode.Id);
-		if (ftpClient != null)
+		if (ftpClient != null) {
 			return ftpClient;
+		}
 		else {
 			FTPCLIENT.put(
 					serverNode.Id,

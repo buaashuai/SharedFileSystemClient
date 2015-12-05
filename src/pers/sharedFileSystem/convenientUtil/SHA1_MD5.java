@@ -1,4 +1,6 @@
-package pers.sharedFileSystem.bloomFilterManager.hashFunctions;
+package pers.sharedFileSystem.convenientUtil;
+
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -6,8 +8,6 @@ import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 public class SHA1_MD5 {
 	public final static String MD5 = "MD5";

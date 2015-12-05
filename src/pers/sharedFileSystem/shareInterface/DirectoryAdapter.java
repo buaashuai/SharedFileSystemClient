@@ -3,10 +3,7 @@ package pers.sharedFileSystem.shareInterface;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.sun.corba.se.spi.activation.Server;
 import net.sf.json.JSONArray;
@@ -156,15 +153,31 @@ public class DirectoryAdapter extends Adapter {
     public JSONObject deleteSelective(List<String> fileNames) {
         Feedback feedback = null;
         boolean flag = true;
+        Hashtable<String,Boolean> infos=new Hashtable<String,Boolean>();
+        int num=0;
         for (String name : fileNames) {
-            if (name.equals("Fingerprint.sys")&&!AdvancedFileUtil.delete(this.NODE,
+            if (name.equals("Fingerprint.sys")|| !AdvancedFileUtil.delete(this.NODE,
                     this.FILEPATH + "/" + name))
-                flag = false;
+                // 删除失败
+                infos.put(name,false);
+            else {
+                // 删除成功
+                num++;
+                infos.put(name, true);
+            }
         }
-        if (flag) {
+        if (num==fileNames.size()) {
             feedback = new Feedback(3000, "");
-        } else
+            feedback.addFeedbackInfo("delete all files successful.");
+        } else {
             feedback = new Feedback(3001, "");
+            String str="delete file error[ ";
+            for (String name : fileNames) {
+                str+=name+":"+infos.get(name)+",";
+            }
+            str+=" ]";
+            feedback.addFeedbackInfo(str);
+        }
         return feedback.toJsonObject();
     }
 }

@@ -22,7 +22,7 @@ public class AdvancedFileUtil {
 	/**
 	 * 判断文件是否存在
 	 * 
-	 * @param serverNode
+	 * @param node
 	 *            待验证的文件所在的根节点对象
 	 * @param filePath
 	 *            文件绝对路径，不带文件名
@@ -50,8 +50,8 @@ public class AdvancedFileUtil {
 			try {
 				String relativePath = filePath.substring(node.StorePath
 						.length());
-				ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
-				FTPFile[] ftpFiles = ftpClient.listFiles(new String(fileName.getBytes(),"ISO-8859-1"));
+				ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
+				FTPFile[] ftpFiles = ftpClient.listFiles(fileName);//new String(fileName.getBytes(),"ISO-8859-1")
 				if (ftpFiles.length > 0)
 					re = true;
 			} catch (Exception e) {
@@ -76,14 +76,20 @@ public class AdvancedFileUtil {
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
 			File file = new File(route);
 			// 如果文件夹不存在则创建
-			if (!file.exists() && !file.isDirectory())
+			if (!file.exists() && !file.isDirectory()) {
 				file.mkdir();
+				LogRecord.FileHandleInfoLogger.info("make directiry at "+serverNode.Ip+": "+route);
+			}
 		} else {
 			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
 					false);
 			try {
-				String relativePath = route.substring(directoryNode.Path.length());
-				ftpClient.makeDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
+				String relativePath = route.substring(directoryNode.StorePath.length());
+				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
+				if(!flag) {
+					ftpClient.makeDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
+					LogRecord.FileHandleInfoLogger.info("make directiry at " + serverNode.Ip + ": " + route);
+				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -193,8 +199,8 @@ public class AdvancedFileUtil {
 			// ftpClient.setControlEncoding(encoding); // 中文支持
 			boolean re = false;
 			try {
-				String relativePath = filePath.substring(node.Path.length());
-				boolean flag=ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
+				String relativePath = filePath.substring(node.StorePath.length());
+				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 				if(flag){//刪除的是文件夹
 					ftpClient.changeToParentDirectory();
 					re=deleteRemoteDirectory(node,ftpClient,relativePath);//为了删除中文文件，必须加编码
@@ -204,7 +210,7 @@ public class AdvancedFileUtil {
 						return false;
 					}
 				}else{//删除的是文件
-					re=ftpClient.deleteFile(new String(relativePath.getBytes(),"ISO-8859-1"));
+					re=ftpClient.deleteFile(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 					if(re==false)
 						LogRecord.FileHandleErrorLogger.error("file path illegal: "+serverNode.Ip + "/"
 								+ filePath);
@@ -229,10 +235,10 @@ public class AdvancedFileUtil {
 	private static  boolean deleteRemoteDirectory(DirectoryNode directoryNode, FTPClient ftpClient, String relativePath) {
 		String sourceFilePath=relativePath;
 		try {
-			relativePath=new String(relativePath.getBytes(),"ISO-8859-1");
+//			relativePath=new String(relativePath.getBytes(),"ISO-8859-1");
 			FTPFile[] files = ftpClient.listFiles(relativePath);
 			for (FTPFile file : files) {
-				String fileName=new String(file.getName().getBytes("ISO-8859-1"),"gb2312");
+				String fileName=file.getName();//new String(file.getName().getBytes("ISO-8859-1"),"gb2312")
 				if (file.isDirectory()) {
 					deleteRemoteDirectory(directoryNode,ftpClient,sourceFilePath+ "/" +fileName);
 				}

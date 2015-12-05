@@ -27,15 +27,14 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import pers.sharedFileSystem.bloomFilterManager.hashFunctions.SHA1_MD5;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonUtil;
+import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
-import pers.sharedFileSystem.networkManager.FileSystemClient;
 
 /**
  * 文件适配器提供文件操作的基本功能
@@ -216,7 +215,7 @@ public class FileAdapter extends Adapter {
 	 *            路径参数
 	 */
 	public FileAdapter(String sourceNodeId, String fileName,
-					   Map<String, String> parms) {
+					   Map<String, String> parms){
 		Node n=Config.getNodeByNodeId(sourceNodeId);
 		if(n==null||n instanceof ServerNode) {
 			LogRecord.FileHandleErrorLogger.error("["+sourceNodeId+"] is not a DirectoryNode id");
@@ -231,16 +230,21 @@ public class FileAdapter extends Adapter {
 				parms, false);
 		// 在指定的节点下生成文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
+		String filePath="";
 		if (jsonArray.size() < 1)
 			this.FILEPATH = node.StorePath + "/" + fileName;
 		else {
-			String filePath = jsonArray.getString(0);
+			filePath= jsonArray.getString(0);
 			this.FILEPATH = node.StorePath + filePath + "/"
 					+ fileName;
 		}
-		if(!new File(this.FILEPATH).exists()){
-			LogRecord.FileHandleErrorLogger.error("file not exist: "
+		if(!AdvancedFileUtil.isFileExist(node,node.StorePath + filePath + "/",fileName,false)){
+			LogRecord.FileHandleErrorLogger.error("source file not exist: "
 					+ node.getServerNode().Ip + "/" + this.FILEPATH);
+			this.NODE = null;
+			this.NODEID = "";
+			this.fileName = "";
+			this.FILEPATH="";
 		}
 	}
 
@@ -477,7 +481,7 @@ public class FileAdapter extends Adapter {
 					ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
 							false);
 				}
-				String relativePath = destFilePath.substring(destRootNode.Path
+				String relativePath = destFilePath.substring(destRootNode.StorePath
 						.length());
 				ftpClient.changeWorkingDirectory(relativePath);
 				ftpClient.storeFile(fileName, stream2);
@@ -639,8 +643,10 @@ public class FileAdapter extends Adapter {
 			boolean result = saveFile(stream2, node, destFilePath,
 					fileName);
 			if (result) {
-				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,destFilePath,fileName);
-				sendAddFigurePrintMessage(desNodeId, fInfo);//向布隆过滤器添加指纹
+				if (node.Redundancy.Switch) {
+					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint, destFilePath, fileName);
+					sendAddFigurePrintMessage(desNodeId, fInfo);//向布隆过滤器添加指纹
+				}
 				feedback = new Feedback(3000, "");
 				if(jsonArray.size()>0) {
 					feedback.addFeedbackInfo(jsonArray.getString(0) + "/"
