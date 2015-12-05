@@ -11,6 +11,7 @@ import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.entity.FingerprintInfo;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.entity.SystemConfig;
@@ -150,11 +151,28 @@ public class Test2 {
         System.out.println("*****************");
     }
 
-
+    /**
+     * 哈希函数测试
+     * @throws Exception
+     */
+    private void md5Test(){
+        SHA1_MD5 sha1_md5=new SHA1_MD5();
+        String fileName="E:/图片视频/30939_1132245_133682.jpg";
+        String md5= sha1_md5.digestFile(fileName,SHA1_MD5.MD5);
+        String sha_1= sha1_md5.digestFile(fileName,SHA1_MD5.SHA_1);
+        String SHA_256= sha1_md5.digestFile(fileName,SHA1_MD5.SHA_256);
+        String SHA_512= sha1_md5.digestFile(fileName,SHA1_MD5.SHA_512);
+        String SHA_384= sha1_md5.digestFile(fileName,SHA1_MD5.SHA_384);
+        System.out.println(md5.length()+": "+md5);
+        System.out.println(sha_1.length()+": "+sha_1);
+        System.out.println(SHA_256.length()+": "+SHA_256);
+        System.out.println(SHA_512.length()+": "+SHA_512);
+        System.out.println(SHA_384.length()+": "+SHA_384);
+    }
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.getAllFilePathsTest();
+        test2.md5Test();
     }
 
 }

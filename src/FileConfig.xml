@@ -28,13 +28,6 @@
 			<userName>dell</userName><!-- 该服务器的登录用户名 -->
 			<password>0987654321</password><!-- 该服务器的登录密码 -->
 		</backupNode>
-		<backupNode id="backup2">
-			<ip>10.24.208.103</ip><!--节点存储位置(本地/远程服务器) 192.168.192.100-->
-			<port>21</port><!--ftp端口-->
-			<serverPort>9998</serverPort><!--该服务器上的文件系统端口-->
-			<userName>dell</userName><!-- 该服务器的登录用户名 -->
-			<password>0987654321</password><!-- 该服务器的登录密码 -->
-		</backupNode>
 	</serverNode>
 	
 	<serverNode id="renderNode"><!-- 渲染场景存储服务器节点 -->

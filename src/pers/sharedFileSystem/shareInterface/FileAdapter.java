@@ -27,6 +27,8 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import pers.sharedFileSystem.communicationObject.MessageProtocol;
+import pers.sharedFileSystem.communicationObject.MessageType;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
@@ -35,6 +37,7 @@ import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
+import pers.sharedFileSystem.networkManager.FileSystemClient;
 
 /**
  * 文件适配器提供文件操作的基本功能
@@ -66,7 +69,7 @@ public class FileAdapter extends Adapter {
 	}
 
 	/**
-	 * 根据指纹信息验证文件是否存在
+	 * 根据指纹信息验证文件是否存在，向冗余验证服务器发送文件指纹验证指令
 	 *
 	 * @param desNodeId
 	 *            目的节点id
@@ -77,24 +80,22 @@ public class FileAdapter extends Adapter {
 	public static  JSONObject isFileExistInBloomFilter(String desNodeId, String figurePrint) {
 		Feedback feedback = null;
 		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
+//			Node node = Config.getNodeByNodeId(desNodeId);
 //			Socket socket = FileSystemClient.getSocketByServerNodeId(node
 //					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				feedback = new Feedback(3001 ,"");
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return feedback.toJsonObject();
-			}
+//			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
+//			if(socket==null){
+//				feedback = new Feedback(3001 ,"");
+//				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
+//				return feedback.toJsonObject();
+//			}
 			MessageProtocol queryMessage = new MessageProtocol();
 			queryMessage.messageType = MessageType.CHECK_REDUNDANCY;
 			queryMessage.content.put("figurePrint",figurePrint);
 			queryMessage.content.put("desNodeId",desNodeId);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
+			FileSystemClient.sendMessage(queryMessage);
 			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
+					FileSystemClient.getSocket().getInputStream());
 			MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
 			if (replyMessage != null
 					&& replyMessage.messageType == MessageType.REPLY_CHECK_REDUNDANCY) {
@@ -124,7 +125,7 @@ public class FileAdapter extends Adapter {
 	 * 向存储服务器发送添加映射信息指令
 	 * @param desNodeId
 	 *            目的节点id
-	 * @param keyPath 节目录节点相对路径（相对该节点的根存储根路径）
+	 * @param keyPath 节目相对路径（相对该节点的根存储根路径）
 	 * @param otherFilePath 该目录节点下的存储在其他文件夹里面的冗余文件的相对路径
 	 */
 	private JSONObject sendRedundancyFileStoreInfoMessage(String desNodeId, String keyPath, String otherFilePath){
@@ -181,25 +182,26 @@ public class FileAdapter extends Adapter {
 	 * @param figurePrint
 	 *            文件指纹信息
 	 */
-	public void sendAddFigurePrintMessage(String desNodeId, FingerprintInfo figurePrint) {
+	private void sendAddFigurePrintMessage(String desNodeId, FingerprintInfo figurePrint) {
 		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
+//			Node node = Config.getNodeByNodeId(desNodeId);
 //			Socket socket = FileSystemClient.getSocketByServerNodeId(node
 //					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return;
-			}
+//			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
+//			if(socket==null){
+//				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
+//				return;
+//			}
 			MessageProtocol queryMessage = new MessageProtocol();
 			queryMessage.messageType = MessageType.ADD_FINGERPRINT;
 			queryMessage.content.put("figurePrint",figurePrint.Md5);
 			queryMessage.content.put("FilePath",figurePrint.FilePath);
 			queryMessage.content.put("FileName",figurePrint.FileName);
 			queryMessage.content.put("desNodeId",desNodeId);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
+//			ObjectOutputStream oos = new ObjectOutputStream(
+//					socket.getOutputStream());
+//			oos.writeObject(queryMessage);
+			FileSystemClient.sendMessage(queryMessage);
 		} catch (Exception e) {
 			LogRecord.RunningErrorLogger.error(e.toString());
 		}
@@ -588,7 +590,8 @@ public class FileAdapter extends Adapter {
 					else {//存储到根节点
 						keyPath="/";
 					}
-					sendRedundancyFileStoreInfoMessage(desNodeId,keyPath, strP);//向存储服务器发送添加映射信息指令
+					//************************************************//
+					//sendRedundancyFileStoreInfoMessage(desNodeId,keyPath, strP);//向存储服务器发送添加映射信息指令
 					return feedback.toJsonObject();
 				}
 

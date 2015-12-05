@@ -31,6 +31,10 @@ public class ServerNode extends Node implements Serializable {
 	 */
 	public Hashtable<String,BackupNode>BackupNodeTable;
 	/**
+	 * 默认使用的备份节点编号
+	 */
+	public String BackupNodeId;
+	/**
 	 * ServerNode服务器的用户名
 	 */
 	public String UserName;
@@ -42,6 +46,10 @@ public class ServerNode extends Node implements Serializable {
 	 * 对该服务器的子节点进行统计之后，得到的该服务器的文件删冗信息
 	 */
 	public RedundancyInfo ServerRedundancy;
+	/**
+	 * 该存储服务器运行是否正常
+	 */
+	public boolean isRunning;
 	/**
 	 * 打印节点信息
 	 * 

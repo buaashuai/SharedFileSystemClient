@@ -170,6 +170,7 @@ public class ConfigParse {
         serverNode.Id = element.getAttributeValue("id");
         serverNode.UserName = element.getChildText("userName");
         serverNode.Password = element.getChildText("password");
+        serverNode.isRunning=true;
         List<Element> e_directoryNodes = element.getChildren("directoryNode");
         List<Element> e_backupNodes = element.getChildren("backupNode");
         List<DirectoryNode> childNodes = new ArrayList<DirectoryNode>();
@@ -180,10 +181,15 @@ public class ConfigParse {
                     serverNode,"");
             childNodes.add(directoryNode);
         }
+        String backupNodeId="";
         for(Element e:e_backupNodes){
             BackupNode backupNode=parseBackupNode(e);
+            //第一个备份节点为默认备份节点
+            if(backupNodeId=="")
+                backupNodeId=backupNode.Id;
             backupNodeTable.put(backupNode.Id,backupNode);
         }
+        serverNode.BackupNodeId=backupNodeId;
         serverNode.DirectoryNodeTable = directoryNodeTable;
         serverNode.BackupNodeTable=backupNodeTable;
         serverNode.ChildNodes = childNodes;
@@ -307,8 +313,8 @@ public class ConfigParse {
         }
         Element element = doc.getRootElement();
         SystemConfig systemConfig = new SystemConfig();
-        systemConfig.FileSystemPort = Integer.parseInt(element.getChildText("fileSystemPort"));
-        systemConfig.ServerNodeName = element.getChildText("serverNodeName");
+        systemConfig.Port = Integer.parseInt(element.getChildText("port"));
+        systemConfig.Ip = element.getChildText("ip");
         Config.SYSTEMCONFIG = systemConfig;
     }
 }
