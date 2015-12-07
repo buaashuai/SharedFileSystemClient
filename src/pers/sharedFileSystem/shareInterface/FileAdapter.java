@@ -14,10 +14,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -27,8 +24,7 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import pers.sharedFileSystem.communicationObject.MessageProtocol;
-import pers.sharedFileSystem.communicationObject.MessageType;
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
@@ -66,145 +62,6 @@ public class FileAdapter extends Adapter {
 
 	public FileAdapter() {
 
-	}
-
-	/**
-	 * 根据指纹信息验证文件是否存在，向冗余验证服务器发送文件指纹验证指令
-	 *
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param figurePrint
-	 *            文件指纹信息
-	 * @return 文件存在返回文件绝对地址 ，否则返回false
-	 */
-	public static  JSONObject isFileExistInBloomFilter(String desNodeId, String figurePrint) {
-		Feedback feedback = null;
-		try {
-//			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-//			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-//			if(socket==null){
-//				feedback = new Feedback(3001 ,"");
-//				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-//				return feedback.toJsonObject();
-//			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.CHECK_REDUNDANCY;
-			queryMessage.content.put("figurePrint",figurePrint);
-			queryMessage.content.put("desNodeId",desNodeId);
-			FileSystemClient.sendMessage(queryMessage);
-			ObjectInputStream ois = new ObjectInputStream(
-					FileSystemClient.getSocket().getInputStream());
-			MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
-			if (replyMessage != null
-					&& replyMessage.messageType == MessageType.REPLY_CHECK_REDUNDANCY) {
-				if (replyMessage.content.get("messageCode").equals("4002")) {
-					feedback = new Feedback(3010 ,"");
-					return feedback.toJsonObject();
-				}else if (replyMessage.content.get("messageCode").equals("4000")){
-					feedback = new Feedback(3000 ,"");
-					//并返回指纹信息
-					feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-					return feedback.toJsonObject();
-				}else if(replyMessage.content.get("messageCode").equals("4003")){
-					feedback = new Feedback(3015 ,"");
-					return feedback.toJsonObject();
-				}
-			}
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-			feedback = new Feedback(3001 ,e.toString());
-			return feedback.toJsonObject();
-		}
-		feedback = new Feedback(3001 ,"");
-		return feedback.toJsonObject();
-	}
-
-	/**
-	 * 向存储服务器发送添加映射信息指令
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param keyPath 节目相对路径（相对该节点的根存储根路径）
-	 * @param otherFilePath 该目录节点下的存储在其他文件夹里面的冗余文件的相对路径
-	 */
-	private JSONObject sendRedundancyFileStoreInfoMessage(String desNodeId, String keyPath, String otherFilePath){
-		Feedback feedback = null;
-		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				feedback = new Feedback(3001 ,"");
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return feedback.toJsonObject();
-			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
-			queryMessage.content.put("desNodeId",desNodeId);
-			queryMessage.content.put("keyPath",keyPath);
-			queryMessage.content.put("otherFilePath",otherFilePath);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
-			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
-			MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
-			if (replyMessage != null
-					&& replyMessage.messageType == MessageType.REPLY_ADD_REDUNDANCY_INFO) {
-				if (replyMessage.content.get("messageCode").equals("4002")) {
-					feedback = new Feedback(3010 ,"");
-					return feedback.toJsonObject();
-				}else if (replyMessage.content.get("messageCode").equals("4000")){
-					feedback = new Feedback(3000 ,"");
-					//并返回指纹信息
-					feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-					return feedback.toJsonObject();
-				}else if(replyMessage.content.get("messageCode").equals("4003")){
-					feedback = new Feedback(3015 ,"");
-					return feedback.toJsonObject();
-				}
-			}
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-			feedback = new Feedback(3001 ,e.toString());
-			return feedback.toJsonObject();
-		}
-		feedback = new Feedback(3001 ,"");
-		return feedback.toJsonObject();
-	}
-	/**
-	 * 给服务端的文件系统发送指纹置位命令
-	 *
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param figurePrint
-	 *            文件指纹信息
-	 */
-	private void sendAddFigurePrintMessage(String desNodeId, FingerprintInfo figurePrint) {
-		try {
-//			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-//			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-//			if(socket==null){
-//				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-//				return;
-//			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.ADD_FINGERPRINT;
-			queryMessage.content.put("figurePrint",figurePrint.Md5);
-			queryMessage.content.put("FilePath",figurePrint.FilePath);
-			queryMessage.content.put("FileName",figurePrint.FileName);
-			queryMessage.content.put("desNodeId",desNodeId);
-//			ObjectOutputStream oos = new ObjectOutputStream(
-//					socket.getOutputStream());
-//			oos.writeObject(queryMessage);
-			FileSystemClient.sendMessage(queryMessage);
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-		}
 	}
 
 	/**
@@ -553,6 +410,36 @@ public class FileAdapter extends Adapter {
 			}
 			ByteArrayOutputStream baos = inputStreamToByte(inputStream);
 
+			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
+
+			byte[] bs = new byte[1024];// 1Kb
+			int len = 0;
+			len = stream1.read(bs);
+			// 第一次读取输入流，用来判断文件类型， 以及该文件类型是否符合节点的白名单规定
+			FileType fileType = CommonFileUtil.getFileType(bs);// 目前没法识别XML、TXT这些文本文件，只能通过后缀名识别，因为他们的文件头不固定
+			// 文本文件无法用文件头进行识别，因此默认为用户上传的文件后缀
+			String fileSuffix=parms.get("fileSuffix");
+
+			if (!CommonFileUtil.isLegalFile(bs, node, fileType,fileSuffix)) {
+				feedback = new Feedback(3006, "文件类型：" + fileType);
+				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
+				return feedback.toJsonObject();
+			}
+
+			// 判断fileName是否有后缀名
+			if (!fileName.contains(".")) {
+				if (fileType == FileType.UNCERTAIN) {
+					if(CommonUtil.validateString(fileSuffix))
+						fileName += "." + fileSuffix;
+					else{
+						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
+						feedback = new Feedback(3016, "");
+						return feedback.toJsonObject();
+					}
+				}else
+					fileName += "." + fileType.toString();
+			}
+
 			if (node.Redundancy.Switch) {//如果上传的节点需要进行文件删冗
 				// 布隆过滤器置位
 				if(node.Redundancy.FingerGenType== FingerGenerateType.CLIENT) {
@@ -575,12 +462,12 @@ public class FileAdapter extends Adapter {
 					}
 					LogRecord.FileHandleInfoLogger.info("generate new md5:"+fingerPrint);
 				}
-
-				JSONObject re= isFileExistInBloomFilter(desNodeId, fingerPrint);
+				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,fileType);
+				JSONObject re=FileSystemClient.isFileExistInBloomFilter(fInfo);
 				if(re.getInt("Errorcode") == 3000){//表示指纹信息存在
 					//给客户端返回文件存储的位置
 					feedback = new Feedback(3000, "");
-					String strP=re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
+					String strP="";//re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
 					feedback.addFeedbackInfo(strP);
 					feedback.addFeedbackInfo("repeat",true);
 					String keyPath="";
@@ -597,35 +484,7 @@ public class FileAdapter extends Adapter {
 
 			}
 
-			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
 
-			byte[] bs = new byte[1024];// 1Kb
-			int len = 0;
-			len = stream1.read(bs);
-			// 第一次读取输入流，用来判断文件类型， 以及该文件类型是否符合节点的白名单规定
-			FileType fileType = CommonFileUtil.getFileType(bs);// 目前没法识别XML、TXT这些文本文件，只能通过后缀名识别，因为他们的文件头不固定
-			// 文本文件无法用文件头进行识别，因此默认为用户上传的文件后缀
-			String fileSuffix=parms.get("fileSuffix");
-
-			if (!CommonFileUtil.isLegalFile(bs, node, fileType,fileSuffix)) {
-				feedback = new Feedback(3006, "文件类型：" + fileType);
-				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
-				return feedback.toJsonObject();
-			}
-
-			// 判断fileName是否有后缀名
-			if (!fileName.contains(".")) {
-				if (fileType == null) {
-					if(CommonUtil.validateString(fileSuffix))
-						fileName += "." + fileSuffix;
-					else{
-						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
-						feedback = new Feedback(3016, "");
-						return feedback.toJsonObject();
-					}
-				}else
-					fileName += "." + fileType.toString();
-			}
 			// 判断文件是否存在
 			boolean type = false;
 			if (this.NODE != null
@@ -647,8 +506,12 @@ public class FileAdapter extends Adapter {
 					fileName);
 			if (result) {
 				if (node.Redundancy.Switch) {
-					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint, destFilePath, fileName);
-					sendAddFigurePrintMessage(desNodeId, fInfo);//向布隆过滤器添加指纹
+					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, destFilePath, fileName,fileType);
+					JSONObject re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向布隆过滤器添加指纹
+					if(re.getInt("Errorcode") != 3000){
+						feedback = new Feedback(3017, "");
+						return feedback.toJsonObject();
+					}
 				}
 				feedback = new Feedback(3000, "");
 				if(jsonArray.size()>0) {

@@ -78,7 +78,7 @@ public class CommonFileUtil {
                 return type;
             }
         }
-        return null;
+        return FileType.UNCERTAIN;
     }
 
     /**
@@ -92,14 +92,14 @@ public class CommonFileUtil {
     public static boolean isLegalFile(byte[] bs, Node node, FileType fileType,String fileSuffix) {
         if (node instanceof DirectoryNode) {
             DirectoryNode dNode = (DirectoryNode) node;
-            if (fileType == null) {// 对于无法自动识别的文件类型，单独做处理
+            if (fileType == FileType.UNCERTAIN) {// 对于无法自动识别的文件类型，单独做处理
                 for (FileType f : dNode.WhiteList) {
                     if (f.toString().equals(fileSuffix.toUpperCase())) {
                         return true;
                     }
                 }
             }
-            if (dNode.WhiteList.contains(FileType.ANY) || fileType != null
+            if (dNode.WhiteList.contains(FileType.ANY) || fileType != FileType.UNCERTAIN
                     && dNode.WhiteList.contains(fileType))
                 return true;
         }

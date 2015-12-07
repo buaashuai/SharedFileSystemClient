@@ -13,6 +13,10 @@ public enum FileType implements Serializable {
 	 */
 	ANY("0000000000"),
 	/**
+	 * 无法确定文件类型
+	 */
+	UNCERTAIN("??????????"),
+	/**
 	 * JEPG.jpg
 	 */
 	JPEG("ffd8ffe000104a464946"),

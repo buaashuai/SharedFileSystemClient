@@ -34,10 +34,12 @@ public class KeepAliveWatchDog implements Runnable {
 				try {
 					MessageProtocol queryMessage = new MessageProtocol();
 					queryMessage.messageType = MessageType.KEEP_ALIVE;
-					FileSystemClient.sendMessage(queryMessage);
+					FileSystemClient.sendMessageToRedundancyServer(queryMessage);
 					lastSendTime=System.currentTimeMillis();
+					LogRecord.RunningInfoLogger.info("send handshake");
 				} catch (IOException e) {
 					e.printStackTrace();
+					FileSystemClient.startReconnectServer();
 					// 发送的处理方法
 					LogRecord.RunningErrorLogger.error("net work error, can not connect to redundancyServer."+e.toString());
 				}

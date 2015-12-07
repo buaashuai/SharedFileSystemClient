@@ -2,7 +2,6 @@ package pers.sharedFileSystem.test;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -12,9 +11,11 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
-import pers.sharedFileSystem.entity.FingerprintInfo;
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.entity.FileType;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.entity.SystemConfig;
+import pers.sharedFileSystem.networkManager.FileSystemClient;
 import pers.sharedFileSystem.shareInterface.DirectoryAdapter;
 import pers.sharedFileSystem.shareInterface.FileAdapter;
 
@@ -64,13 +65,21 @@ public class Test2 {
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
 //        FileAdapter fileAdapter = new FileAdapter("hallType", "1.txt", map);
-        JSONObject re = fileAdapter.saveFileTo("temp",
-                "2.jpg", map);
-        System.out.println(re);
-        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
-        JSONObject re2 = fileAdapter2.saveFileTo("temp",
-                "3.jpg", map);
-        System.out.println(re2);
+        for(int i=0;i<10;i++) {
+            inputStream = new FileInputStream(new File(
+                    "E:/图片视频/ra32.txt"));
+            fileAdapter = new FileAdapter(inputStream);
+            String name=i+"output.txt";
+            map.put("fileSuffix","txt");
+            JSONObject re = fileAdapter.saveFileTo("temp",
+                    name, map);
+            System.out.println(re);
+        }
+
+//        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
+//        JSONObject re2 = fileAdapter2.saveFileTo("temp",
+//                "3.jpg", map);
+//        System.out.println(re2);
 //        if (re2.getInt("Errorcode") != 3000) {
 //            System.out.println("false");
 //        } else {
@@ -169,10 +178,33 @@ public class Test2 {
         System.out.println(SHA_512.length()+": "+SHA_512);
         System.out.println(SHA_384.length()+": "+SHA_384);
     }
+
+    /**
+     * 指纹信息是否存在测试
+     */
+    private void isFileExistInBloomFilterTest(){
+        String fingerPrint="b9a9a033372818b7c6d6078c2657db2a";
+        FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,FileType.UNCERTAIN);
+        JSONObject re= FileSystemClient.isFileExistInBloomFilter(fInfo);
+        System.out.println(re);
+    }
+
+    /**
+     * 添加指纹信息测试
+     */
+    private void sendAddFigurePrintMessageTest(){
+        String fingerPrint="b9a9a033372818b7c6d6078c2657db2a";
+        String destFilePath="temp";
+        String node="dd";
+        String fileName="aa.txt";
+        FileType type=FileType.UNCERTAIN;
+        FingerprintInfo fInfo = new FingerprintInfo(fingerPrint, node,destFilePath, fileName,type);
+        FileSystemClient.sendAddFigurePrintMessage(fInfo);//向布隆过滤器添加指纹
+    }
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.md5Test();
+        test2.saveFileToTest();
     }
 
 }
