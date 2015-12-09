@@ -204,7 +204,7 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.saveFileToTest();
+        test2.isFileExistInBloomFilterTest();
     }
 
 }

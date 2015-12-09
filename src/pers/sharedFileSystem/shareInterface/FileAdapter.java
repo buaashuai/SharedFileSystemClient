@@ -508,6 +508,7 @@ public class FileAdapter extends Adapter {
 				if (node.Redundancy.Switch) {
 					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, destFilePath, fileName,fileType);
 					JSONObject re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向布隆过滤器添加指纹
+					//向文件存储服务器添加指纹信息
 					if(re.getInt("Errorcode") != 3000){
 						feedback = new Feedback(3017, "");
 						return feedback.toJsonObject();
