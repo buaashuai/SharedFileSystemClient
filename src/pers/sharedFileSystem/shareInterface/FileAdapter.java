@@ -25,6 +25,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.net.ftp.FTPClient;
 
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.communicationObject.RedundancyFileStoreInfo;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
@@ -463,25 +464,23 @@ public class FileAdapter extends Adapter {
 					LogRecord.FileHandleInfoLogger.info("generate new md5:"+fingerPrint);
 				}
 				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,fileType);
-				JSONObject re=FileSystemClient.isFileExistInBloomFilter(fInfo);
-				if(re.getInt("Errorcode") == 3000){//表示指纹信息存在
+				Feedback re=FileSystemClient.isFileExistInBloomFilter(fInfo);
+				if(re.getErrorcode() == 3000){//表示指纹信息存在
 					//给客户端返回文件存储的位置
-					feedback = new Feedback(3000, "");
-					String strP="";//re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
-					feedback.addFeedbackInfo(strP);
-					feedback.addFeedbackInfo("repeat",true);
-					String keyPath="";
-					if(jsonArray.size()>0) {//存储到非根节点
-						keyPath=jsonArray.getString(0) + "/";
+					//re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
+					re.addFeedbackInfo("repeat",true);
+					FingerprintInfo ff=(FingerprintInfo)re.getFeedbackInfo("FingerprintInfo");
+					RedundancyFileStoreInfo redundancyFileStoreInfo=new RedundancyFileStoreInfo();
+					redundancyFileStoreInfo.addFingerprintInfo(ff);
+					redundancyFileStoreInfo.essentialStorePath="/";
+					if(jsonArray.size()>0){
+						redundancyFileStoreInfo.essentialStorePath=jsonArray.getString(0)+ "/";
 					}
-					else {//存储到根节点
-						keyPath="/";
-					}
-					//************************************************//
-					//sendRedundancyFileStoreInfoMessage(desNodeId,keyPath, strP);//向存储服务器发送添加映射信息指令
-					return feedback.toJsonObject();
+					Feedback re2=FileSystemClient.sendAddRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向存储服务器发送添加映射信息指令
+					if(re2.getErrorcode() != 3000)
+						re.setErrorcode(3018);
+					return re.toJsonObject();
 				}
-
 			}
 
 
@@ -507,9 +506,9 @@ public class FileAdapter extends Adapter {
 			if (result) {
 				if (node.Redundancy.Switch) {
 					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, destFilePath, fileName,fileType);
-					JSONObject re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向布隆过滤器添加指纹
+					Feedback re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向冗余验证服务器的布隆过滤器添加指纹
 					//向文件存储服务器添加指纹信息
-					if(re.getInt("Errorcode") != 3000){
+					if(re.getErrorcode() != 3000){
 						feedback = new Feedback(3017, "");
 						return feedback.toJsonObject();
 					}

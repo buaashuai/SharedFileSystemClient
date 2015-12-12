@@ -4,12 +4,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import net.sf.json.JSONObject;
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.communicationObject.MessageProtocol;
 import pers.sharedFileSystem.communicationObject.MessageType;
+import pers.sharedFileSystem.communicationObject.RedundancyFileStoreInfo;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.logManager.LogRecord;
@@ -20,32 +21,23 @@ import pers.sharedFileSystem.logManager.LogRecord;
  * @author buaashuai
  */
 public class FileSystemClient {
-    /**
-     * 存储服务器和客户端之间的socket连接，ip——> socket
-     */
-    private static ConcurrentHashMap<String, Socket> SOCKETPOOL;
+
     /**
      * 客户端和冗余验证服务器之间的socket连接
      */
     private static  Socket socket;
     private static SystemConfig sysConf=Config.SYSTEMCONFIG;
+    private static Hashtable<String, ServerNode> fileConfig=Config.getConfig();
     /**
-     * 客户端和冗余验证服务器之间的对象输出流
+     * 客户端和存储服务器之间的socket连接
      */
-    private static ObjectOutputStream oos = null;
+    private static ConcurrentHashMap<String,Socket>storeSockets=new ConcurrentHashMap<String,Socket>();
+
 
     /**
-     * 获取客户端和冗余验证服务器之间的socket连接
-     * @return
+     * 重新建立客户端和冗余验证服务器之间的socket连接
      */
-    public static Socket getSocket(){
-        return socket;
-    }
-
-    /**
-     * 重连冗余验证服务器
-     */
-    public static void startReconnectServer(){
+    public static void restartConnectToRedundancyServer(){
         try {
             LogRecord.RunningErrorLogger.error("attempt to reconnect to redundancy server.");
             socket = new Socket(sysConf.Ip, sysConf.Port);
@@ -53,25 +45,44 @@ public class FileSystemClient {
             e.printStackTrace();
         }
     }
+    /**
+     * 重新建立客户端和某个存储服务器之间的socket连接
+     */
+    public static void restartConnectToStoreServer(String serverNodeId){
+        try {
+            ServerNode serverNode=fileConfig.get(serverNodeId);
+            LogRecord.RunningErrorLogger.error("attempt to reconnect to store server. [ "+serverNode.Ip+" : "+serverNode.Port+" ]");
+            Socket so = new Socket(serverNode.Ip, serverNode.Port);
+            storeSockets.put(serverNodeId,so);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     static {
-        SOCKETPOOL = new ConcurrentHashMap<String, Socket>();
         try {
-            socket = new Socket(sysConf.Ip, sysConf.Port);
-            KeepAliveWatchDog k1 = new KeepAliveWatchDog();
-            Thread t1 = new Thread(k1);
-            t1.start();
-
-//            Hashtable<String, ServerNode> serverNodes = Config.getConfig();
-//            for (ServerNode sNode : serverNodes.values()) {
-//                // if(CommonUtil.isRemoteServer(sNode.Ip)){
-//                Socket so = new Socket(sNode.Ip, sNode.ServerPort);
-//                if(so==null){
-//                    LogRecord.RunningErrorLogger.error("socket initial failed. "+sNode.Ip+" : "+sNode.ServerPort);
-//                }
-//                SOCKETPOOL.put(sNode.Id, so);
-//                // }
-//            }
+            boolean isRudundancyStarted=false;
+            // 如果某个ServerNode（存储服务器）节点中的某个目录需要进行文件去冗，就建立客户端和冗余验证服务器之间的长连接
+            //同时需要建立客户端和该ServerNode（存储服务器）之间的长连接
+            for(ServerNode sn:fileConfig.values()) {
+                if(sn.ServerRedundancy.Switch) {
+                    if (!isRudundancyStarted) {
+                        socket = new Socket(sysConf.Ip, sysConf.Port);
+                        KeepAliveWatchRedundancy k1 = new KeepAliveWatchRedundancy();
+                        Thread t1 = new Thread(k1);
+                        t1.start();
+                        LogRecord.RunningInfoLogger.info("connect to RudundancyServer successful. [ "+sysConf.Ip+" : "+sysConf.Port+" ]");
+                        isRudundancyStarted = true;
+                    }
+                    Socket sk=new Socket(sn.Ip, sn.Port);
+                    KeepAliveWatchStore ks=new KeepAliveWatchStore(sn.Id);
+                    Thread t2 = new Thread(ks);
+                    t2.start();
+                    //保存该长连接
+                    storeSockets.put(sn.Id,sk);
+                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+" : "+sn.Port+" ]");
+                }
+            }
         } catch (Exception e) {
             // TODO Auto-generated catch block
             LogRecord.RunningErrorLogger.error(e.toString());
@@ -79,64 +90,90 @@ public class FileSystemClient {
     }
 
     /**
-     * 根据根节点id获取对应的Socket对象
-     *
-     * @param serverNodeId
-     *            根节点ID
-     * @return
-     */
-    public static Socket getSocketByServerNodeId(String serverNodeId) {
-        return SOCKETPOOL.get(serverNodeId);
-    }
-    /**
      * 将一个消息对象发送给冗余验证服务器
      *
      */
     public static void sendMessageToRedundancyServer(MessageProtocol mes) throws IOException {
-            oos = new ObjectOutputStream(socket.getOutputStream());
+            ObjectOutputStream oos = new ObjectOutputStream(socket.getOutputStream());
             oos.writeObject(mes);
             oos.flush();
     }
-
+    /**
+     * 将一个消息对象发送给某个存储服务器
+     *@param serverNodeId 存储服务器编号
+     *@param  mes 消息对象
+     */
+    public static void sendMessageToStoreServer(String serverNodeId,MessageProtocol mes) throws IOException {
+        Socket so=storeSockets.get(serverNodeId);
+        ObjectOutputStream oos = new ObjectOutputStream(so.getOutputStream());
+        oos.writeObject(mes);
+        oos.flush();
+    }
     /**
      * 解析冗余验证服务器发来的消息（冗余验证请求回复消息）
      * @param replyMessage
      * @return
      */
-    private static JSONObject parseReplyCheckRedundancy(MessageProtocol replyMessage){
+    private static Feedback parseReplyFromRedundancyServer(MessageProtocol replyMessage){
         Feedback feedback = null;
         switch (replyMessage.messageCode){
             case 4000:{
                 feedback = new Feedback(3000 ,"");
                 //并返回指纹信息
-//                feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-                return feedback.toJsonObject();
+                if(replyMessage.messageType==MessageType.REPLY_CHECK_REDUNDANCY) {
+                    FingerprintInfo fInfo=(FingerprintInfo)replyMessage.content;
+                    feedback.addFeedbackInfo("FingerprintInfo",fInfo);
+                }
+                return feedback;
             }
             case 4001:{
                 feedback = new Feedback(3010 ,"");
-                return feedback.toJsonObject();
+                return feedback;
             }
             case 4002:{
                 feedback = new Feedback(3015 ,"");
-                return feedback.toJsonObject();
+                return feedback;
             }
             default:{
-                return feedback.toJsonObject();
+                return feedback;
             }
         }
     }
     /**
-     * 解析冗余验证服务器发来的消息
+     * 解析存储服务器发来的消息（冗余验证请求回复消息）
      * @param replyMessage
      * @return
      */
-    private static JSONObject parseMessageFromRedundancy(MessageProtocol replyMessage){
+    private static Feedback parseReplyFromStoreServer(MessageProtocol replyMessage){
+        Feedback feedback = null;
+        switch (replyMessage.messageCode){
+            case 4000:{
+                feedback = new Feedback(3000 ,"");
+                return feedback;
+            }
+            default:{
+                return feedback;
+            }
+        }
+    }
+    /**
+     * 解析收到的消息
+     * @param replyMessage
+     * @return
+     */
+    private static Feedback parseMessage(MessageProtocol replyMessage){
         switch (replyMessage.messageType){
             case REPLY_CHECK_REDUNDANCY:{
-                return parseReplyCheckRedundancy(replyMessage);
+                return parseReplyFromRedundancyServer(replyMessage);
             }
             case REPLY_ADD_FINGERPRINT:{
-                return parseReplyCheckRedundancy(replyMessage);
+                return parseReplyFromRedundancyServer(replyMessage);
+            }
+            case REPLY_ADD_REDUNDANCY_INFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_ADD_FINGERPRINTINFO:{
+                return parseReplyFromStoreServer(replyMessage);
             }
             default:{
                 return null;
@@ -150,7 +187,7 @@ public class FileSystemClient {
      *            文件指纹信息
      * @return 文件存在返回文件绝对地址 ，否则返回false
      */
-    public static JSONObject isFileExistInBloomFilter(FingerprintInfo figurePrint) {
+    public static Feedback isFileExistInBloomFilter(FingerprintInfo figurePrint) {
         Feedback feedback = null;
         try {
             MessageProtocol queryMessage = new MessageProtocol();
@@ -160,90 +197,62 @@ public class FileSystemClient {
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
             if (replyMessage != null) {
-                return parseMessageFromRedundancy(replyMessage);
+                return parseMessage(replyMessage);
             }
         } catch (Exception e) {
             LogRecord.RunningErrorLogger.error(e.toString());
         }
         feedback = new Feedback(3001 ,"");
-        return feedback.toJsonObject();
+        return feedback;
     }
     /**
-     * 向存储服务器发送添加映射信息指令
-     * @param desNodeId
-     *            目的节点id
-     * @param keyPath 节目相对路径（相对该节点的根存储根路径）
-     * @param otherFilePath 该目录节点下的存储在其他文件夹里面的冗余文件的相对路径
+     * 向存储服务器发送添加冗余文件映射信息指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param redundancyFileStoreInfo 冗余文件信息
      */
-    public static JSONObject sendRedundancyFileStoreInfoMessage(String desNodeId, String keyPath, String otherFilePath){
+    public static Feedback sendAddRedundancyFileStoreInfoMessage(String serverNodeId, RedundancyFileStoreInfo redundancyFileStoreInfo){
         Feedback feedback = null;
-//        try {
-//            Node node = Config.getNodeByNodeId(desNodeId);
-////			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-////					.getServerNode().Id);
-//            Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-//            if(socket==null){
-//                feedback = new Feedback(3001 ,"");
-//                LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-//                return feedback.toJsonObject();
-//            }
-//            MessageProtocol queryMessage = new MessageProtocol();
-//            queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
-//            queryMessage.content.put("desNodeId",desNodeId);
-//            queryMessage.content.put("keyPath",keyPath);
-//            queryMessage.content.put("otherFilePath",otherFilePath);
-//            ObjectOutputStream oos = new ObjectOutputStream(
-//                    socket.getOutputStream());
-//            oos.writeObject(queryMessage);
-//            ObjectInputStream ois = new ObjectInputStream(
-//                    socket.getInputStream());
-//            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
-//            if (replyMessage != null
-//                    && replyMessage.messageType == MessageType.REPLY_ADD_REDUNDANCY_INFO) {
-//                if (replyMessage.content.get("messageCode").equals("4002")) {
-//                    feedback = new Feedback(3010 ,"");
-//                    return feedback.toJsonObject();
-//                }else if (replyMessage.content.get("messageCode").equals("4000")){
-//                    feedback = new Feedback(3000 ,"");
-//                    //并返回指纹信息
-//                    feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-//                    return feedback.toJsonObject();
-//                }else if(replyMessage.content.get("messageCode").equals("4003")){
-//                    feedback = new Feedback(3015 ,"");
-//                    return feedback.toJsonObject();
-//                }
-//            }
-//        } catch (Exception e) {
-//            LogRecord.RunningErrorLogger.error(e.toString());
-//            feedback = new Feedback(3001 ,e.toString());
-//            return feedback.toJsonObject();
-//        }
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
+            queryMessage.content=redundancyFileStoreInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
         feedback = new Feedback(3001 ,"");
-        return feedback.toJsonObject();
+        return feedback;
     }
     /**
-     * 给服务端的文件系统发送指纹置位命令
+     * 给冗余验证服务端发送指纹置位命令
      *
      * @param figurePrint
      *            文件指纹信息
      */
-    public static JSONObject sendAddFigurePrintMessage(FingerprintInfo figurePrint) {
+    public static Feedback sendAddFigurePrintMessage(FingerprintInfo figurePrint) {
         Feedback feedback = null;
         try {
             MessageProtocol queryMessage = new MessageProtocol();
             queryMessage.messageType = MessageType.ADD_FINGERPRINT;
             queryMessage.content=figurePrint;
-            FileSystemClient.sendMessageToRedundancyServer(queryMessage);
+            sendMessageToRedundancyServer(queryMessage);
             ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
             if (replyMessage != null) {
-                return parseMessageFromRedundancy(replyMessage);
+                return parseMessage(replyMessage);
             }
         } catch (Exception e) {
             LogRecord.RunningErrorLogger.error(e.toString());
         }
         feedback = new Feedback(3001 ,"");
-        return feedback.toJsonObject();
+        return feedback;
     }
 
 }

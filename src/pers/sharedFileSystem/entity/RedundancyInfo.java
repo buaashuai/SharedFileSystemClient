@@ -10,7 +10,7 @@ import java.io.Serializable;
  */
 public class RedundancyInfo implements Serializable {
 	/**
-	 * 是否进行删冗
+	 * 是否进行删冗,true是,false否
 	 */
 	public boolean Switch;
 	/**

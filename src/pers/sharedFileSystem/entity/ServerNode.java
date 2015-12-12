@@ -27,11 +27,11 @@ public class ServerNode extends Node implements Serializable {
 	 */
 	public Hashtable<String, DirectoryNode> DirectoryNodeTable;
 	/**
-	 * ServerNode包含的节点id和备份节点对象的映射
+	 * ServerNode包含的节点id和备份节点对象的映射（此字段暂时无用）
 	 */
 	public Hashtable<String,BackupNode>BackupNodeTable;
 	/**
-	 * 默认使用的备份节点编号
+	 * 默认使用的备份节点编号（此字段暂时无用）
 	 */
 	public String BackupNodeId;
 	/**

@@ -6,16 +6,16 @@ import pers.sharedFileSystem.communicationObject.MessageType;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 /**
- * 长连接维护线程
+ * 客户端和冗余验证服务器之间的长连接维护线程
  *
  */
-public class KeepAliveWatchDog implements Runnable {
+public class KeepAliveWatchRedundancy implements Runnable {
 	private long checkDelay = 500;//线程多久循环一次
 	private long keepAliveDelay = 3000;//握手协议发送时间间隔
 	private boolean run;// 线程是否运行
 	private long lastSendTime;//上次发送时间
 
-	public KeepAliveWatchDog() {
+	public KeepAliveWatchRedundancy() {
 		lastSendTime=System.currentTimeMillis();
 		this.run = true;
 	}
@@ -39,7 +39,7 @@ public class KeepAliveWatchDog implements Runnable {
 					LogRecord.RunningInfoLogger.info("send handshake");
 				} catch (IOException e) {
 					e.printStackTrace();
-					FileSystemClient.startReconnectServer();
+					FileSystemClient.restartConnectToRedundancyServer();
 					// 发送的处理方法
 					LogRecord.RunningErrorLogger.error("net work error, can not connect to redundancyServer."+e.toString());
 				}

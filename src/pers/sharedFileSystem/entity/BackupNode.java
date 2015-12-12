@@ -3,7 +3,7 @@ package pers.sharedFileSystem.entity;
 import java.io.Serializable;
 
 /**
- * 备份节点信息
+ * 备份节点信息（此类暂时无用）
  */
 public class BackupNode  extends Node implements Serializable {
 

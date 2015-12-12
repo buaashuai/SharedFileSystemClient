@@ -12,6 +12,7 @@ import net.sf.json.JSONObject;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.entity.Feedback;
 import pers.sharedFileSystem.entity.FileType;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.entity.SystemConfig;
@@ -185,7 +186,7 @@ public class Test2 {
     private void isFileExistInBloomFilterTest(){
         String fingerPrint="b9a9a033372818b7c6d6078c2657db2a";
         FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,FileType.UNCERTAIN);
-        JSONObject re= FileSystemClient.isFileExistInBloomFilter(fInfo);
+        Feedback re= FileSystemClient.isFileExistInBloomFilter(fInfo);
         System.out.println(re);
     }
 
