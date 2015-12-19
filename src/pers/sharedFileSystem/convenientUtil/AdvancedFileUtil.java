@@ -187,7 +187,7 @@ public class AdvancedFileUtil {
 				return false;
 			} else {
 				// 判断是否为文件
-				if (file.isFile()&&!file.getName().equals("Fingerprint.sys")) { // 为文件时调用删除文件方法
+				if (file.isFile()) { // 为文件时调用删除文件方法&&!file.getName().equals("Fingerprint.sys")
 					return deleteLocalFile(filePath);
 				} else { // 为目录时调用删除目录方法
 					return deleteLocalDirectory(filePath);

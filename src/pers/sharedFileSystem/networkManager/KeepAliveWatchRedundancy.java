@@ -36,7 +36,7 @@ public class KeepAliveWatchRedundancy implements Runnable {
 					queryMessage.messageType = MessageType.KEEP_ALIVE;
 					FileSystemClient.sendMessageToRedundancyServer(queryMessage);
 					lastSendTime=System.currentTimeMillis();
-					LogRecord.RunningInfoLogger.info("send handshake");
+					LogRecord.RunningInfoLogger.info("send handshake to redundancyServer");
 				} catch (IOException e) {
 					e.printStackTrace();
 					FileSystemClient.restartConnectToRedundancyServer();

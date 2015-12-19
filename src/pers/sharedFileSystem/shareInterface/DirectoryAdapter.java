@@ -10,6 +10,7 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
@@ -21,6 +22,7 @@ import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.exceptionManager.ErrorHandler;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
+import pers.sharedFileSystem.networkManager.FileSystemClient;
 
 /**
  * 文件目录适配器提供文件目录操作的基本功能
@@ -74,19 +76,24 @@ public class DirectoryAdapter extends Adapter {
      * 获取该目录下所有的文件相对路径（不包括目录文件）
      */
     public JSONArray getAllFilePaths() {
-        ArrayList<String> files = new ArrayList<String>();
+        ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();
         ServerNode serverNode = this.NODE.getServerNode();
         String relativePath = this.FILEPATH.substring( this.NODE.StorePath.length());
         if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
             File desFolderPath = new File(this.FILEPATH);
             String[] filelist = null;
             if (desFolderPath.isDirectory()) {
+                //首先获取本文件夹里面的文件
                 filelist = desFolderPath.list();
                 for (int i = 0; i < filelist.length; i++) {
                     File readfile = new File(this.FILEPATH + "/"
                             + filelist[i]);
                     if (readfile.isFile()) {
-                        files.add(relativePath + "/" + readfile.getName());
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(relativePath + "/");
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileName(readfile.getName());
+                        files.add(fInfo);
                     }
                 }
             }
@@ -95,16 +102,28 @@ public class DirectoryAdapter extends Adapter {
                     false);
             boolean flag = false;
             try {
-                flag = ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(), "ISO-8859-1"));
+                flag = ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
                 if (flag) {//是文件夹
                     ftpClient.changeToParentDirectory();
                     FTPFile[] ftpFiles = ftpClient.listFiles(relativePath);
                     for (FTPFile f : ftpFiles) {
-                        files.add(relativePath + "/" + f.getName());
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(relativePath + "/");
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileName(f.getName());
+                        files.add(fInfo);
                     }
                 }
             } catch (Exception e) {
                 LogRecord.FileHandleErrorLogger.error(e.toString());
+            }
+        }
+        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+        if(this.NODE.Redundancy.Switch){
+            Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
+            if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+                ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+                files.addAll(otherPath);
             }
         }
         return JSONArray.fromObject(files);
@@ -116,6 +135,7 @@ public class DirectoryAdapter extends Adapter {
     public ArrayList<String> getAllFileNames() {
         ArrayList<String> files = new ArrayList<String>();
         ServerNode serverNode = this.NODE.getServerNode();
+        String relativePath = this.FILEPATH.substring(this.NODE.StorePath.length());
         if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
             File desFolderPath = new File(this.FILEPATH);
             String[] filelist = null;
@@ -126,10 +146,9 @@ public class DirectoryAdapter extends Adapter {
         } else {
             FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
                     false);
-            String relativePath = this.FILEPATH.substring(this.NODE.StorePath.length());
             boolean flag = false;
             try {
-                flag = ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(), "ISO-8859-1"));
+                flag = ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
 
                 if (flag) {//是文件夹
                     ftpClient.changeToParentDirectory();
@@ -140,6 +159,16 @@ public class DirectoryAdapter extends Adapter {
                 }
             } catch (Exception e) {
                 LogRecord.FileHandleErrorLogger.error(e.toString());
+            }
+        }
+        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+        if(this.NODE.Redundancy.Switch){
+            Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
+            if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+                ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+                for(FingerprintInfo info:otherPath) {
+                    files.add(info.getFileName());
+                }
             }
         }
         return files;

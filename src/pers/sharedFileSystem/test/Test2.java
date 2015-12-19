@@ -1,7 +1,6 @@
 package pers.sharedFileSystem.test;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -10,12 +9,14 @@ import java.util.List;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.convenientUtil.CommonUtil;
 import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.entity.Feedback;
 import pers.sharedFileSystem.entity.FileType;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.entity.SystemConfig;
+import pers.sharedFileSystem.logManager.LogRecord;
 import pers.sharedFileSystem.networkManager.FileSystemClient;
 import pers.sharedFileSystem.shareInterface.DirectoryAdapter;
 import pers.sharedFileSystem.shareInterface.FileAdapter;
@@ -57,7 +58,7 @@ public class Test2 {
      */
     private void saveFileToTest() throws Exception {
 		FileInputStream inputStream = new FileInputStream(new File(
-				"E:/图片视频/30939_1132245_133682.jpg"));
+				"E:/图片视频/16300001051406139354937304388.jpg"));
 		FileAdapter fileAdapter = new FileAdapter(inputStream);
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("categoryId", "5");
@@ -65,17 +66,21 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-//        FileAdapter fileAdapter = new FileAdapter("hallType", "1.txt", map);
-        for(int i=0;i<10;i++) {
-            inputStream = new FileInputStream(new File(
-                    "E:/图片视频/ra32.txt"));
-            fileAdapter = new FileAdapter(inputStream);
-            String name=i+"output.txt";
-            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp",
-                    name, map);
-            System.out.println(re);
-        }
+//        JSONObject re = fileAdapter.saveFileTo("temp",
+//                "1.jpg", map);
+//        System.out.println(re);
+
+        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
+//        for(int i=0;i<10;i++) {
+//            inputStream = new FileInputStream(new File(
+//                    "E:/图片视频/ra32.txt"));
+//            fileAdapter = new FileAdapter(inputStream);
+//            String name=i+"output.txt";
+//            map.put("fileSuffix","txt");
+//            JSONObject re = fileAdapter.saveFileTo("temp",
+//                    name, map);
+//            System.out.println(re);
+//        }
 
 //        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
 //        JSONObject re2 = fileAdapter2.saveFileTo("temp",
@@ -141,9 +146,11 @@ public class Test2 {
         map.put("hallTypeId", "3");
         map.put("categoryId", "5");
         map.put("hehe", "2");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("tempStoreNode", map);
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         JSONArray re = dicAdapter.getAllFilePaths();
+        ArrayList<String> re2 = dicAdapter.getAllFileNames();
         System.out.println(re);
+        System.out.println(re2);
     }
 
     /**
@@ -202,10 +209,61 @@ public class Test2 {
         FingerprintInfo fInfo = new FingerprintInfo(fingerPrint, node,destFilePath, fileName,type);
         FileSystemClient.sendAddFigurePrintMessage(fInfo);//向布隆过滤器添加指纹
     }
+
+    /**
+     * 测试return和Finally哪个优先执行
+     */
+    private boolean returnFinallyPriorityTest(){
+        FileOutputStream fout=null;
+        ObjectOutputStream sout =null;
+        String fingerprintInfo="hello";
+        try{
+            fout= new FileOutputStream("D:/a/a/aaaa.txt", true);
+            sout= new ObjectOutputStream(fout);
+            sout.writeObject(fingerprintInfo);
+            System.out.println("i am OK");
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+            System.out.println("i am FileNotFoundException");
+            return false;
+        }catch (IOException e){
+            e.printStackTrace();
+            System.out.println("i am IOException");
+            return false;
+        }finally {
+            System.out.println("i am finally");
+            try {
+                if(fout!=null)
+                    fout.close();
+                if(sout!=null)
+                    sout.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        System.out.println("i am return");
+        return true;
+    }
+
+    /**
+     * Feedback类toJsonObject测试
+     */
+    private void FeedbackTest(){
+        Feedback feedback = null;
+        feedback = new Feedback(3000 ,"");
+        FingerprintInfo fingerprintInfo=new FingerprintInfo("13456","temp","e:/df","a.txt", FileType.ANY);
+        feedback.addFeedbackInfo("FingerprintInfo",fingerprintInfo);
+        feedback.addFeedbackInfo("sdfgsdfg");
+        feedback.addFeedbackInfo("sdf23234");
+        JSONObject re=feedback.toJsonObject();
+        System.out.println(re);
+    }
+
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.isFileExistInBloomFilterTest();
+        test2.saveFileToTest();
+//        System.out.println(re);
     }
 
 }

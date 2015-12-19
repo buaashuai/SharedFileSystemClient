@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +17,7 @@ import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 /**
- * 应用程序端的文件系统与服务端的文件系统之间的socket长连接池
+ * 应用程序端的文件系统与服务端的文件系统之间的socket长连接池，以及信息交互方法类
  *
  * @author buaashuai
  */
@@ -32,7 +33,6 @@ public class FileSystemClient {
      * 客户端和存储服务器之间的socket连接
      */
     private static ConcurrentHashMap<String,Socket>storeSockets=new ConcurrentHashMap<String,Socket>();
-
 
     /**
      * 重新建立客户端和冗余验证服务器之间的socket连接
@@ -74,13 +74,13 @@ public class FileSystemClient {
                         LogRecord.RunningInfoLogger.info("connect to RudundancyServer successful. [ "+sysConf.Ip+" : "+sysConf.Port+" ]");
                         isRudundancyStarted = true;
                     }
-                    Socket sk=new Socket(sn.Ip, sn.Port);
+                    Socket sk=new Socket(sn.Ip, sn.ServerPort);
                     KeepAliveWatchStore ks=new KeepAliveWatchStore(sn.Id);
                     Thread t2 = new Thread(ks);
                     t2.start();
                     //保存该长连接
                     storeSockets.put(sn.Id,sk);
-                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+" : "+sn.Port+" ]");
+                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+" : "+sn.ServerPort+" ]");
                 }
             }
         } catch (Exception e) {
@@ -149,6 +149,26 @@ public class FileSystemClient {
         switch (replyMessage.messageCode){
             case 4000:{
                 feedback = new Feedback(3000 ,"");
+                if(replyMessage.messageType==MessageType.REPLY_GET_REDUNDANCY_INFO) {
+                    ArrayList<FingerprintInfo>fingerprintInfos=(ArrayList<FingerprintInfo>)replyMessage.content;
+                    feedback.addFeedbackInfo("otherPath",fingerprintInfos);
+                }
+                return feedback;
+            }
+            case 4003:{
+                feedback = new Feedback(3019 ,"");
+                return feedback;
+            }
+            case 4004:{
+                feedback = new Feedback(3020 ,"");
+                return feedback;
+            }
+            case 4005:{
+                feedback = new Feedback(3021 ,"");
+                return feedback;
+            }
+            case 4006:{
+                feedback = new Feedback(3023 ,"");
                 return feedback;
             }
             default:{
@@ -173,6 +193,12 @@ public class FileSystemClient {
                 return parseReplyFromStoreServer(replyMessage);
             }
             case REPLY_ADD_FINGERPRINTINFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_ADD_FREQUENCY:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_GET_REDUNDANCY_INFO:{
                 return parseReplyFromStoreServer(replyMessage);
             }
             default:{
@@ -206,6 +232,31 @@ public class FileSystemClient {
         return feedback;
     }
     /**
+     * 向存储服务器发送获取某个路径下的冗余文件信息指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param essentialStorePath 节点相对路径
+     */
+    public static Feedback sendGetRedundancyInfo(String serverNodeId, String essentialStorePath){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.GET_REDUNDANCY_INFO;
+            queryMessage.content=essentialStorePath;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
      * 向存储服务器发送添加冗余文件映射信息指令
      * @param serverNodeId
      *            存储服务器编号
@@ -217,6 +268,56 @@ public class FileSystemClient {
             MessageProtocol queryMessage = new MessageProtocol();
             queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
             queryMessage.content=redundancyFileStoreInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送添加文件引用指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param fingerprintInfo 文件相关信息
+     */
+    public static Feedback sendAddFrequencyMessage(String serverNodeId, FingerprintInfo fingerprintInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.ADD_FREQUENCY;
+            queryMessage.content=fingerprintInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送添加指纹信息指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param fingerprintInfo 指纹信息
+     */
+    public static Feedback sendAddFingerprintInfoMessage(String serverNodeId, FingerprintInfo fingerprintInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.ADD_FINGERPRINTINFO;
+            queryMessage.content=fingerprintInfo;
             sendMessageToStoreServer(serverNodeId,queryMessage);
             Socket so=storeSockets.get(serverNodeId);
             ObjectInputStream ois = new ObjectInputStream(so.getInputStream());

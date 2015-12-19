@@ -156,10 +156,10 @@ public class FileAdapter extends Adapter {
 	 */
 	public JSONObject delete() {
 		Feedback feedback = null;
-		if(this.fileName.equals("Fingerprint.sys")){
-			feedback = new Feedback(3013, "");
-			return feedback.toJsonObject();
-		}
+//		if(this.fileName.equals("Fingerprint.sys")){
+//			feedback = new Feedback(3013, "");
+//			return feedback.toJsonObject();
+//		}
 		if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
 			feedback = new Feedback(3000, "");
 		else
@@ -395,10 +395,13 @@ public class FileAdapter extends Adapter {
 		}
 		// 获取文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-		// 生成文件路径
+		// 生成文件绝对路径
 		String destFilePath = node.StorePath;
+		//文件相对路径
+		String relativePath="/";
 		if(jsonArray.size()>0){
 			destFilePath+=jsonArray.getString(0)+ "/";
+			relativePath=jsonArray.getString(0)+ "/";
 		}
 		try {
 			if (inputStream == null && CommonUtil.validateString(this.FILEPATH)) {
@@ -472,14 +475,25 @@ public class FileAdapter extends Adapter {
 					FingerprintInfo ff=(FingerprintInfo)re.getFeedbackInfo("FingerprintInfo");
 					RedundancyFileStoreInfo redundancyFileStoreInfo=new RedundancyFileStoreInfo();
 					redundancyFileStoreInfo.addFingerprintInfo(ff);
-					redundancyFileStoreInfo.essentialStorePath="/";
-					if(jsonArray.size()>0){
-						redundancyFileStoreInfo.essentialStorePath=jsonArray.getString(0)+ "/";
+					redundancyFileStoreInfo.essentialStorePath=relativePath;
+					Feedback re2=FileSystemClient.sendAddRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向目的结点存储服务器发送添加映射信息指令
+					//获取实际文件的存储节点信息
+					Node nn=Config.getNodeByNodeId(ff.getNodeId());
+					if(nn==null||nn instanceof ServerNode) {
+						LogRecord.FileHandleErrorLogger.error("["+ff.getNodeId()+"] is not a DirectoryNode id");
+						feedback = new Feedback(3011, ff.getNodeId());
+						return feedback.toJsonObject();
 					}
-					Feedback re2=FileSystemClient.sendAddRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向存储服务器发送添加映射信息指令
+					DirectoryNode node2 = (DirectoryNode)nn;// 保存文件的目的节点
+					ServerNode s2 = node2.getServerNode();// 保存文件的目的节点所属的根节点
+					Feedback re3=FileSystemClient.sendAddFrequencyMessage(s2.Id,ff);//向实际文件的存储服务器发送添加文件引用指令
 					if(re2.getErrorcode() != 3000)
 						re.setErrorcode(3018);
+					if(re3.getErrorcode() != 3000)
+						re.setErrorcode(3022);
 					return re.toJsonObject();
+				}else{
+					LogRecord.RunningInfoLogger.info(re);
 				}
 			}
 
@@ -505,11 +519,15 @@ public class FileAdapter extends Adapter {
 					fileName);
 			if (result) {
 				if (node.Redundancy.Switch) {
-					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, destFilePath, fileName,fileType);
+					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, relativePath, fileName,fileType);
 					Feedback re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向冗余验证服务器的布隆过滤器添加指纹
-					//向文件存储服务器添加指纹信息
+					Feedback re2=FileSystemClient.sendAddFingerprintInfoMessage(serverNode.Id, fInfo);//向存储服务器发送添加指纹信息指令
 					if(re.getErrorcode() != 3000){
 						feedback = new Feedback(3017, "");
+						return feedback.toJsonObject();
+					}
+					if(re2.getErrorcode() != 3000){
+						feedback = new Feedback(3020, "");
 						return feedback.toJsonObject();
 					}
 				}

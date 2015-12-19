@@ -39,7 +39,7 @@ public class KeepAliveWatchStore implements Runnable {
 					queryMessage.messageType = MessageType.KEEP_ALIVE;
 					FileSystemClient.sendMessageToStoreServer(serverNodeId,queryMessage);
 					lastSendTime=System.currentTimeMillis();
-					LogRecord.RunningInfoLogger.info("send handshake");
+					LogRecord.RunningInfoLogger.info("send handshake to storeServer [ "+serverNodeId+" ]");
 				} catch (IOException e) {
 					e.printStackTrace();
 					FileSystemClient.restartConnectToStoreServer(serverNodeId);
