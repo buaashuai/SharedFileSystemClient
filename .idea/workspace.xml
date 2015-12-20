@@ -6,27 +6,11 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8d1ec864-595e-4917-8830-2934796e495f" name="Default" comment="扩展了通信消息类型；内部系统之间的接口调用返回值修改为Feedback，以前是JsonObject；实现了ADD_REDUNDANCY_INFO命令（未测试）；增加了冗余文件存储信息类">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/shareInterface/DirectoryAdapter.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/shareInterface/DirectoryAdapter.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/entity/Feedback.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/entity/Feedback.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/shareInterface/FileAdapter.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/shareInterface/FileAdapter.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/networkManager/FileSystemClient.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/networkManager/FileSystemClient.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/entity/ServerNode.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/entity/ServerNode.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/test/Test2.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/test/Test2.class" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/DirectoryAdapter.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/DirectoryAdapter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/entity/Feedback.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/entity/Feedback.java" />
+    <list default="true" id="8d1ec864-595e-4917-8830-2934796e495f" name="Default" comment="DirectoryAdapter中的getAllFilePaths返回值增加冗余文件列表；冗余文件保存之后向目的结点存储服务器发送添加映射信息指令、向实际文件的存储服务器发送添加文件引用指令；实现“向存储服务器发送获取某个路径下的冗余文件信息指令”、“向存储服务器发送添加冗余文件映射信息指令”、“向存储服务器发送添加文件引用指令”、“向存储服务器发送添加指纹信息指令”；FingerprintInfo增加get和set方法，目的是为了将该类转换成json对象；增加消息类型ADD_FREQUENCY、REPLY_ADD_FREQUENCY">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.class" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.class" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/FileConfig.xml" afterPath="$PROJECT_DIR$/src/FileConfig.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/FileConfig.xml" afterPath="$PROJECT_DIR$/target/classes/FileConfig.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/FileSystemClient.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/FileSystemClient.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/FingerprintInfo.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/FingerprintInfo.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchRedundancy.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchRedundancy.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchStore.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchStore.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/test/Test2.java" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/test/Test2.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/pers/sharedFileSystem/exceptionManager/errorcode.properties" afterPath="$PROJECT_DIR$/src/pers/sharedFileSystem/exceptionManager/errorcode.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/exceptionManager/errorcode.properties" afterPath="$PROJECT_DIR$/target/classes/pers/sharedFileSystem/exceptionManager/errorcode.properties" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <list id="a6197c55-aa1d-4d9e-b874-ac79bc068b4d" name="Failed commit: Default" comment="test" />
@@ -70,21 +54,30 @@
         <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="165" column="46" selection-start-line="165" selection-start-column="46" selection-end-line="165" selection-end-column="46" />
-              <folding>
-                <element signature="e#6240#6241#0" expanded="true" />
-                <element signature="e#6279#6280#0" expanded="true" />
-              </folding>
+              <caret line="101" column="0" selection-start-line="101" selection-start-column="0" selection-end-line="101" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="AdvancedFileUtil.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="MessageType.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="82" column="20" selection-start-line="82" selection-start-column="20" selection-end-line="82" selection-end-column="20" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AdvancedFileUtil.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.44510385">
-              <caret line="112" column="26" selection-start-line="112" selection-start-column="26" selection-end-line="112" selection-end-column="26" />
-              <folding />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="181" column="43" selection-start-line="181" selection-start-column="43" selection-end-line="181" selection-end-column="43" />
+              <folding>
+                <element signature="imports" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -95,20 +88,20 @@
             <state vertical-scroll-proportion="0.0">
               <caret line="37" column="32" selection-start-line="37" selection-start-column="32" selection-end-line="37" selection-end-column="32" />
               <folding>
-                <element signature="e#2750#2767#0" expanded="true" />
-                <element signature="e#5352#5360#0" expanded="true" />
+                <element signature="imports" expanded="false" />
+                <element signature="e#7364#7380#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Test2.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Test2.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/test/Test2.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="78" column="42" selection-start-line="78" selection-start-column="42" selection-end-line="78" selection-end-column="42" />
+            <state vertical-scroll-proportion="0.5363924">
+              <caret line="244" column="20" selection-start-line="244" selection-start-column="20" selection-end-line="244" selection-end-column="20" />
               <folding>
-                <element signature="e#5063#5079#0" expanded="true" />
+                <element signature="e#5031#5047#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -196,13 +189,13 @@
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchStore.java" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/entity/Feedback.java" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/FingerprintInfo.java" />
-        <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java" />
         <option value="$PROJECT_DIR$/src/FileConfig.xml" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/FileSystemClient.java" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/DirectoryAdapter.java" />
-        <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/exceptionManager/errorcode.properties" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java" />
+        <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java" />
+        <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java" />
         <option value="$PROJECT_DIR$/src/pers/sharedFileSystem/test/Test2.java" />
       </list>
     </option>
@@ -375,10 +368,6 @@
               <option name="myItemId" value="sharedFileSystem" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="test" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
@@ -421,24 +410,6 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="networkManager" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SharedFileSystemClient" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="SharedFileSystemClient" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="sharedFileSystem" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -554,9 +525,9 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
       <pane id="PackagesPane" />
       <pane id="Scope" />
-      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -1040,7 +1011,8 @@
       <workItem from="1450149700128" duration="9057000" />
       <workItem from="1450317587478" duration="15888000" />
       <workItem from="1450404823350" duration="11888000" />
-      <workItem from="1450494232804" duration="8382000" />
+      <workItem from="1450494232804" duration="12185000" />
+      <workItem from="1450583750758" duration="3816000" />
     </task>
     <task id="LOCAL-00001" summary="first commit">
       <created>1442129376567</created>
@@ -1300,11 +1272,17 @@
       <option name="project" value="LOCAL" />
       <updated>1449939207949</updated>
     </task>
-    <option name="localTasksCounter" value="44" />
+    <task id="LOCAL-00044" summary="DirectoryAdapter中的getAllFilePaths返回值增加冗余文件列表；冗余文件保存之后向目的结点存储服务器发送添加映射信息指令、向实际文件的存储服务器发送添加文件引用指令；实现“向存储服务器发送获取某个路径下的冗余文件信息指令”、“向存储服务器发送添加冗余文件映射信息指令”、“向存储服务器发送添加文件引用指令”、“向存储服务器发送添加指纹信息指令”；FingerprintInfo增加get和set方法，目的是为了将该类转换成json对象；增加消息类型ADD_FREQUENCY、REPLY_ADD_FREQUENCY">
+      <created>1450517944428</created>
+      <option name="number" value="00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1450517944428</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="393143000" />
+    <option name="totallyTimeSpent" value="400762000" />
   </component>
   <component name="TodoView" selected-index="3">
     <todo-panel id="selected-file">
@@ -1329,14 +1307,14 @@
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.43274245" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32046333" sideWeight="0.48322147" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1687898" sideWeight="0.5032051" order="3" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.30865484" sideWeight="0.5167785" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.30865484" sideWeight="0.5167785" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32185146" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3260188" sideWeight="0.49732262" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18247366" sideWeight="0.4920635" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33409438" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18413755" sideWeight="0.49679488" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.26485923" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46715328" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" x="163" y="129" width="1434" height="866" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.15838926" sideWeight="0.50793654" order="6" side_tool="true" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24949427" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
@@ -1360,7 +1338,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
-    <MESSAGE value="定义了户端和服务端的通讯协议，更新了部分布隆过滤器代码。" />
     <MESSAGE value="ServerNode添加serverRedundancy，表示该服务器的文件删冗信息。同时添加对ServerNode中serverRedundancy的解析。" />
     <MESSAGE value="修改部分文件的编码格式为UTF-8，实现计算布隆过滤器的: m和k&#10;m为布隆过滤器的槽数 m bits&#10;k为哈希函数个数&#10;，验证得出系统支持的极限为：&#10;十万分之一误差，5000万个文件，内存占用：142.82699178532886 MB&#10;需要的hash函数个数：16.77367504268881 ≅ 17 个&#10;&#10;增加了一些hash函数" />
     <MESSAGE value="添加MD5哈希函数，修改部分文件编码为UTF-8，布隆过滤器支持判断指纹是否存在，和向布隆过滤器添加指纹" />
@@ -1385,7 +1362,8 @@
     <MESSAGE value="日志记录精确到毫秒；文件类型类中新增了‘不确定’文件类型；客户端和冗余验证服务器直接增加长连接，出现网络故障之后可以重新建立连接；指纹信息类中增加了“文件类型”、“文件存储节点编号”；重构通信协议，增加消息内容类型(状态码)；重构FileSystemClient，对收到的信息进行分类处理。" />
     <MESSAGE value="扩展了通信消息类型；文件类型新增“未知文件”类型；" />
     <MESSAGE value="扩展了通信消息类型；内部系统之间的接口调用返回值修改为Feedback，以前是JsonObject；实现了ADD_REDUNDANCY_INFO命令（未测试）；增加了冗余文件存储信息类" />
-    <option name="LAST_COMMIT_MESSAGE" value="扩展了通信消息类型；内部系统之间的接口调用返回值修改为Feedback，以前是JsonObject；实现了ADD_REDUNDANCY_INFO命令（未测试）；增加了冗余文件存储信息类" />
+    <MESSAGE value="DirectoryAdapter中的getAllFilePaths返回值增加冗余文件列表；冗余文件保存之后向目的结点存储服务器发送添加映射信息指令、向实际文件的存储服务器发送添加文件引用指令；实现“向存储服务器发送获取某个路径下的冗余文件信息指令”、“向存储服务器发送添加冗余文件映射信息指令”、“向存储服务器发送添加文件引用指令”、“向存储服务器发送添加指纹信息指令”；FingerprintInfo增加get和set方法，目的是为了将该类转换成json对象；增加消息类型ADD_FREQUENCY、REPLY_ADD_FREQUENCY" />
+    <option name="LAST_COMMIT_MESSAGE" value="DirectoryAdapter中的getAllFilePaths返回值增加冗余文件列表；冗余文件保存之后向目的结点存储服务器发送添加映射信息指令、向实际文件的存储服务器发送添加文件引用指令；实现“向存储服务器发送获取某个路径下的冗余文件信息指令”、“向存储服务器发送添加冗余文件映射信息指令”、“向存储服务器发送添加文件引用指令”、“向存储服务器发送添加指纹信息指令”；FingerprintInfo增加get和set方法，目的是为了将该类转换成json对象；增加消息类型ADD_FREQUENCY、REPLY_ADD_FREQUENCY" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1680,13 +1658,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="83" column="7" selection-start-line="83" selection-start-column="7" selection-end-line="83" selection-end-column="7" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/networkManager/KeepAliveWatchRedundancy.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1744,6 +1715,42 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.532">
           <caret line="14" column="34" selection-start-line="14" selection-start-column="34" selection-end-line="14" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/DirectoryAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="37" column="32" selection-start-line="37" selection-start-column="32" selection-end-line="37" selection-end-column="32" />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#7364#7380#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="181" column="43" selection-start-line="181" selection-start-column="43" selection-end-line="181" selection-end-column="43" />
+          <folding>
+            <element signature="imports" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/communicationObject/MessageType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="82" column="20" selection-start-line="82" selection-start-column="20" selection-end-line="82" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="101" column="0" selection-start-line="101" selection-start-column="0" selection-end-line="101" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1760,41 +1767,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/test/Test2.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="78" column="42" selection-start-line="78" selection-start-column="42" selection-end-line="78" selection-end-column="42" />
+        <state vertical-scroll-proportion="0.5363924">
+          <caret line="244" column="20" selection-start-line="244" selection-start-column="20" selection-end-line="244" selection-end-column="20" />
           <folding>
-            <element signature="e#5063#5079#0" expanded="true" />
+            <element signature="e#5031#5047#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/FileAdapter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="165" column="46" selection-start-line="165" selection-start-column="46" selection-end-line="165" selection-end-column="46" />
-          <folding>
-            <element signature="e#6240#6241#0" expanded="true" />
-            <element signature="e#6279#6280#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/shareInterface/DirectoryAdapter.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="37" column="32" selection-start-line="37" selection-start-column="32" selection-end-line="37" selection-end-column="32" />
-          <folding>
-            <element signature="e#2750#2767#0" expanded="true" />
-            <element signature="e#5352#5360#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/pers/sharedFileSystem/convenientUtil/AdvancedFileUtil.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.44510385">
-          <caret line="112" column="26" selection-start-line="112" selection-start-column="26" selection-end-line="112" selection-end-column="26" />
-          <folding />
         </state>
       </provider>
     </entry>

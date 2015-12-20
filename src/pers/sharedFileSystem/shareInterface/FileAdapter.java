@@ -101,10 +101,12 @@ public class FileAdapter extends Adapter {
 		if(!AdvancedFileUtil.isFileExist(node,node.StorePath + filePath + "/",fileName,false)){
 			LogRecord.FileHandleErrorLogger.error("source file not exist: "
 					+ node.getServerNode().Ip + "/" + this.FILEPATH);
-			this.NODE = null;
-			this.NODEID = "";
-			this.fileName = "";
-			this.FILEPATH="";
+//			this.NODE = null;
+//			this.NODEID = "";
+//			this.fileName = "";
+//			this.FILEPATH="";
+			//可能是链接文件
+
 		}
 	}
 

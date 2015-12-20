@@ -58,7 +58,7 @@ public class Test2 {
      */
     private void saveFileToTest() throws Exception {
 		FileInputStream inputStream = new FileInputStream(new File(
-				"E:/图片视频/16300001051406139354937304388.jpg"));
+				"E:/图片视频/1.jpg"));
 		FileAdapter fileAdapter = new FileAdapter(inputStream);
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("categoryId", "5");
@@ -66,11 +66,11 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-//        JSONObject re = fileAdapter.saveFileTo("temp",
-//                "1.jpg", map);
-//        System.out.println(re);
+        JSONObject re = fileAdapter.saveFileTo("temp",
+                "2.jpg", map);
+        System.out.println(re);
 
-        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
+//        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
 //        for(int i=0;i<10;i++) {
 //            inputStream = new FileInputStream(new File(
 //                    "E:/图片视频/ra32.txt"));
@@ -262,7 +262,7 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.saveFileToTest();
+        test2.getAllFilePathsTest();
 //        System.out.println(re);
     }
 
