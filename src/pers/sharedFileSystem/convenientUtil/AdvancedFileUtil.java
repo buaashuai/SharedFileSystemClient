@@ -178,7 +178,7 @@ public class AdvancedFileUtil {
 	 */
 	public static boolean delete(DirectoryNode node, String filePath) {
 		ServerNode serverNode = node.getServerNode();
-		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
+		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {//如果是本地文件或者目录
 			File file = new File(filePath);
 			// 判断目录或文件是否存在
 			if (!file.exists()) { // 不存在返回 false

@@ -185,7 +185,7 @@ public class DirectoryAdapter extends Adapter {
         Hashtable<String,Boolean> infos=new Hashtable<String,Boolean>();
         int num=0;
         for (String name : fileNames) {
-            if (name.equals("Fingerprint.sys")|| !AdvancedFileUtil.delete(this.NODE,
+            if (!AdvancedFileUtil.delete(this.NODE,
                     this.FILEPATH + "/" + name))
                 // 删除失败
                 infos.put(name,false);

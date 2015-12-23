@@ -15,6 +15,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -51,6 +52,10 @@ public class FileAdapter extends Adapter {
 	 * 单独的文件名
 	 */
 	private String fileName;
+	/**
+	 * true是链接文件；false是物理文件
+	 */
+	private boolean isLinkedFile=false;
 
 	/**
 	 * 通过文件输入流对文件适配器进行初始化
@@ -90,24 +95,45 @@ public class FileAdapter extends Adapter {
 				parms, false);
 		// 在指定的节点下生成文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-		String filePath="";
+		String filePath="/";
 		if (jsonArray.size() < 1)
-			this.FILEPATH = node.StorePath + "/" + fileName;
+			this.FILEPATH = node.StorePath + filePath + fileName;
 		else {
-			filePath= jsonArray.getString(0);
+			filePath= jsonArray.getString(0);//文件相对路径
 			this.FILEPATH = node.StorePath + filePath + "/"
 					+ fileName;
 		}
 		if(!AdvancedFileUtil.isFileExist(node,node.StorePath + filePath + "/",fileName,false)){
-			LogRecord.FileHandleErrorLogger.error("source file not exist: "
-					+ node.getServerNode().Ip + "/" + this.FILEPATH);
-//			this.NODE = null;
-//			this.NODEID = "";
-//			this.fileName = "";
-//			this.FILEPATH="";
-			//可能是链接文件
-
+			//如果是去冗文件夹，获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+			if(this.NODE.Redundancy.Switch){
+				ServerNode serverNode = this.NODE.getServerNode();
+				Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,filePath+ "/" );
+				if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+					ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+					for(FingerprintInfo info:otherPath) {
+						if(info.getFileName().equals(fileName)){
+							isLinkedFile=true;
+							break;
+						}
+					}
+				}
+			}
+			if(!isLinkedFile) {
+				this.NODE = null;
+				this.NODEID = "";
+				this.fileName = "";
+				this.FILEPATH="";
+				LogRecord.FileHandleErrorLogger.error("source file not exist: "
+						+ node.getServerNode().Ip + "/" + this.FILEPATH);
+				return;
+			}
 		}
+		if(isLinkedFile)
+			LogRecord.FileHandleErrorLogger.error("source file is Linked File: "
+					+ node.getServerNode().Ip + "/" + this.FILEPATH);
+		else
+			LogRecord.FileHandleErrorLogger.error("source file is Physical File: "
+					+ node.getServerNode().Ip + "/" + this.FILEPATH);
 	}
 
 	/**
@@ -162,11 +188,15 @@ public class FileAdapter extends Adapter {
 //			feedback = new Feedback(3013, "");
 //			return feedback.toJsonObject();
 //		}
-		if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
-			feedback = new Feedback(3000, "");
-		else
-			feedback = new Feedback(3001, "");
-		return feedback.toJsonObject();
+		if(isLinkedFile){//如果删除的是链接文件
+
+		}else {
+			if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
+				feedback = new Feedback(3000, "");
+			else
+				feedback = new Feedback(3001, "");
+			return feedback.toJsonObject();
+		}
 	}
 
 	/**
