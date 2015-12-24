@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -58,7 +59,7 @@ public class Test2 {
      */
     private void saveFileToTest() throws Exception {
 		FileInputStream inputStream = new FileInputStream(new File(
-				"E:/图片视频/1.jpg"));
+				"E:/图片视频/2.jpg"));
 		FileAdapter fileAdapter = new FileAdapter(inputStream);
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("categoryId", "5");
@@ -66,22 +67,31 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-        JSONObject re = fileAdapter.saveFileTo("temp",
-                "2.jpg", map);
-        System.out.println(re);
+//        JSONObject re = fileAdapter.saveFileTo("temp",
+//                "2-1.jpg", map);
+//        System.out.println(re);
 
 //        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
-//        for(int i=0;i<10;i++) {
+//        for(int i=1;i<=3;i++) {
+//            String name=i+".jpg";
 //            inputStream = new FileInputStream(new File(
-//                    "E:/图片视频/ra32.txt"));
+//                    "E:/图片视频/"+name));
 //            fileAdapter = new FileAdapter(inputStream);
-//            String name=i+"output.txt";
-//            map.put("fileSuffix","txt");
+////            map.put("fileSuffix","txt");
 //            JSONObject re = fileAdapter.saveFileTo("temp",
-//                    name, map);
+//                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
-
+        for(int i=2;i<=3;i++) {
+            String name=i+".jpg";
+            inputStream = new FileInputStream(new File(
+                    "E:/图片视频/"+name));
+            fileAdapter = new FileAdapter(inputStream);
+//            map.put("fileSuffix","txt");
+            JSONObject re = fileAdapter.saveFileTo("temp2",
+                    i+"-"+i+".jpg", map);
+            System.out.println(re);
+        }
 //        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
 //        JSONObject re2 = fileAdapter2.saveFileTo("temp",
 //                "3.jpg", map);
@@ -104,17 +114,17 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("tempStoreNode", map);
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         List<String> fileNames = new ArrayList<String>();
         fileNames.add("2.jpg");
         fileNames.add("32.jpg");
 //	fileNames.add("24.txt");
-	FileAdapter fileAdapter = new FileAdapter("tempStoreNode",
-			"3.jpg", map);
+	FileAdapter fileAdapter = new FileAdapter("temp",
+			"1-1.jpg", map);
 //	FileAdapter fileAdapter2 = new FileAdapter("hehe",
 //			"4.jpg", map);
-        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
-        System.out.println(re1);
+//        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
+//        System.out.println(re1);
 	JSONObject re2 =fileAdapter.delete();
 	System.out.println(re2);
 //	JSONObject re3 =fileAdapter2.delete();
@@ -259,10 +269,34 @@ public class Test2 {
         System.out.println(re);
     }
 
+    public static ConcurrentHashMap<String,FingerprintInfo> fileReferenceInfoMap=new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String,FingerprintInfo> fingerprintInfoMap=new ConcurrentHashMap<>();
+
+    /**
+     * 测试双索引，其中一个对象变了之后，另外一个索引能否获取到最新的对象信息
+     */
+    private void hashMapTest(){
+        FingerprintInfo fingerprintInfo=new FingerprintInfo("13456","temp","e:/df/","a.txt", FileType.ANY);
+
+        fileReferenceInfoMap.put(fingerprintInfo.getMd5(),fingerprintInfo);
+        fingerprintInfoMap.put(fingerprintInfo.getFilePath()+fingerprintInfo.getFileName(),fingerprintInfo);
+        FingerprintInfo tmp=fileReferenceInfoMap.get("13456");
+        tmp.setFrequency(10);
+        System.out.println(fingerprintInfoMap.get(fingerprintInfo.getFilePath()+fingerprintInfo.getFileName()));
+        System.out.println(fileReferenceInfoMap.get("13456"));
+        FingerprintInfo tmp2=fingerprintInfoMap.get(fingerprintInfo.getFilePath()+fingerprintInfo.getFileName());
+        tmp2.setFrequency(20);
+        System.out.println(fingerprintInfoMap.get(fingerprintInfo.getFilePath()+fingerprintInfo.getFileName()));
+        System.out.println(fileReferenceInfoMap.get("13456"));
+        fileReferenceInfoMap.remove("13456");
+        System.out.println(fingerprintInfoMap.get(fingerprintInfo.getFilePath()+fingerprintInfo.getFileName()));
+        System.out.println(fileReferenceInfoMap.get("13456"));
+    }
+
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.getAllFilePathsTest();
+        test2.deleteFileTest();
 //        System.out.println(re);
     }
 

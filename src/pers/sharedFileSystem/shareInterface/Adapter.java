@@ -21,4 +21,8 @@ public class Adapter {
 	 * </p>
 	 */
 	protected  String FILEPATH;
+	/**
+	 * 相对路径（以‘/’结尾）
+	 */
+	protected  String RELATIVE_FILEPATH;
 }

@@ -56,6 +56,10 @@ public class FileAdapter extends Adapter {
 	 * true是链接文件；false是物理文件
 	 */
 	private boolean isLinkedFile=false;
+	/**
+	 * 如果是链接文件，则此字段表示链接文件对应的实际文件的文件指纹信息
+	 */
+	private FingerprintInfo physicalFile;
 
 	/**
 	 * 通过文件输入流对文件适配器进行初始化
@@ -95,37 +99,40 @@ public class FileAdapter extends Adapter {
 				parms, false);
 		// 在指定的节点下生成文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-		String filePath="/";
+		this.RELATIVE_FILEPATH="/";
 		if (jsonArray.size() < 1)
-			this.FILEPATH = node.StorePath + filePath + fileName;
+			this.FILEPATH = node.StorePath + this.RELATIVE_FILEPATH + fileName;
 		else {
-			filePath= jsonArray.getString(0);//文件相对路径
-			this.FILEPATH = node.StorePath + filePath + "/"
+			this.RELATIVE_FILEPATH= jsonArray.getString(0)+ "/";//文件相对路径
+			this.FILEPATH = node.StorePath +  this.RELATIVE_FILEPATH
 					+ fileName;
 		}
-		if(!AdvancedFileUtil.isFileExist(node,node.StorePath + filePath + "/",fileName,false)){
-			//如果是去冗文件夹，获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
-			if(this.NODE.Redundancy.Switch){
-				ServerNode serverNode = this.NODE.getServerNode();
-				Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,filePath+ "/" );
-				if(feedback.getErrorcode()==3000) {//表示存在冗余文件
-					ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
-					for(FingerprintInfo info:otherPath) {
-						if(info.getFileName().equals(fileName)){
-							isLinkedFile=true;
-							break;
-						}
+		//如果是去冗文件夹，获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+		if(this.NODE.Redundancy.Switch){
+			ServerNode serverNode = this.NODE.getServerNode();
+			Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id, this.RELATIVE_FILEPATH );
+			if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+				ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+				for(FingerprintInfo info:otherPath) {
+					if(info.getFileName().equals(fileName)){
+						isLinkedFile=true;
+						physicalFile=info;
+						break;
 					}
 				}
 			}
-			if(!isLinkedFile) {
-				this.NODE = null;
-				this.NODEID = "";
-				this.fileName = "";
-				this.FILEPATH="";
-				LogRecord.FileHandleErrorLogger.error("source file not exist: "
-						+ node.getServerNode().Ip + "/" + this.FILEPATH);
-				return;
+		}
+		//同一个目录引用同一个目录下的冗余文件，优先删除链接文件
+		if(!isLinkedFile) {
+			if (!AdvancedFileUtil.isFileExist(node, node.StorePath + this.RELATIVE_FILEPATH, fileName, false)) {
+					this.NODE = null;
+					this.NODEID = "";
+					this.fileName = "";
+					this.FILEPATH = "";
+					this.RELATIVE_FILEPATH = "";
+					LogRecord.FileHandleErrorLogger.error("source file not exist: "
+							+ node.getServerNode().Ip + "/" + this.FILEPATH);
+					return;
 			}
 		}
 		if(isLinkedFile)
@@ -189,13 +196,48 @@ public class FileAdapter extends Adapter {
 //			return feedback.toJsonObject();
 //		}
 		if(isLinkedFile){//如果删除的是链接文件
-
-		}else {
-			if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
-				feedback = new Feedback(3000, "");
-			else
-				feedback = new Feedback(3001, "");
-			return feedback.toJsonObject();
+			ServerNode serverNode = this.NODE.getServerNode();
+			RedundancyFileStoreInfo redundancyFileStoreInfo=new RedundancyFileStoreInfo();
+			redundancyFileStoreInfo.essentialStorePath= this.RELATIVE_FILEPATH;
+			ArrayList<FingerprintInfo> otherFileInfo=new ArrayList<FingerprintInfo>();
+			FingerprintInfo info=new FingerprintInfo();
+			info.setFileName(this.fileName);
+			otherFileInfo.add(info);
+			redundancyFileStoreInfo.otherFileInfo=otherFileInfo;
+			Feedback re=FileSystemClient.sendDeleteRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向目的结点存储服务器发送删除映射信息指令
+			if(re.getErrorcode() != 3000) {
+				re.setErrorcode(3024);
+			}
+			//获取实际文件的存储节点信息
+			Node nn=Config.getNodeByNodeId(physicalFile.getNodeId());
+			if(nn==null||nn instanceof ServerNode) {
+				LogRecord.FileHandleErrorLogger.error("["+physicalFile.getNodeId()+"] is not a DirectoryNode id");
+				feedback = new Feedback(3011, physicalFile.getNodeId());
+				return feedback.toJsonObject();
+			}
+			DirectoryNode node2 = (DirectoryNode)nn;// 保存文件的目的节点
+			ServerNode s2 = node2.getServerNode();// 保存文件的目的节点所属的根节点
+			Feedback re2=FileSystemClient.sendDeleteFrequencyMessage(s2.Id, physicalFile);//向实际文件的存储服务器发送删除文件引用指令
+			if(re2.getErrorcode() != 3000)
+				re.setErrorcode(3025);
+			return re.toJsonObject();
+		}else {//如果删除的是物理文件
+			if (this.NODE.Redundancy.Switch) {//如果删除结点是去冗结点
+				ServerNode serverNode = this.NODE.getServerNode();// 保存文件的目的节点所属的根节点
+				FingerprintInfo fInfo = new FingerprintInfo();
+				fInfo.setFilePath(this.RELATIVE_FILEPATH);
+				fInfo.setFileName(this.fileName);
+				Feedback re=FileSystemClient.sendDeleteFingerprintInfoMessage(serverNode.Id, fInfo);//向存储服务器发送删除指纹信息指令
+				if(re.getErrorcode() != 3000)
+					re.setErrorcode(3026);
+				return re.toJsonObject();
+			}else {//如果删除的结点不是去冗结点，直接删除物理文件
+				if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
+					feedback = new Feedback(3000, "");
+				else
+					feedback = new Feedback(3001, "");
+				return feedback.toJsonObject();
+			}
 		}
 	}
 

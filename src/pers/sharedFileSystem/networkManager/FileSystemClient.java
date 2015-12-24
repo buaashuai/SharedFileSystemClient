@@ -8,10 +8,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 
-import pers.sharedFileSystem.communicationObject.FingerprintInfo;
-import pers.sharedFileSystem.communicationObject.MessageProtocol;
-import pers.sharedFileSystem.communicationObject.MessageType;
-import pers.sharedFileSystem.communicationObject.RedundancyFileStoreInfo;
+import pers.sharedFileSystem.communicationObject.*;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.logManager.LogRecord;
@@ -153,6 +150,10 @@ public class FileSystemClient {
                     ArrayList<FingerprintInfo>fingerprintInfos=(ArrayList<FingerprintInfo>)replyMessage.content;
                     feedback.addFeedbackInfo("otherPath",fingerprintInfos);
                 }
+                if(replyMessage.messageType==MessageType.REPLY_VALIDATE_FILENAMES) {
+                    ArrayList<FingerprintInfo>fingerprintInfos=(ArrayList<FingerprintInfo>)replyMessage.content;
+                    feedback.addFeedbackInfo("validateFiles",fingerprintInfos);
+                }
                 return feedback;
             }
             case 4003:{
@@ -169,6 +170,18 @@ public class FileSystemClient {
             }
             case 4006:{
                 feedback = new Feedback(3023 ,"");
+                return feedback;
+            }
+            case 4007:{
+                feedback = new Feedback(3024 ,"");
+                return feedback;
+            }
+            case 4008:{
+                feedback = new Feedback(3025 ,"");
+                return feedback;
+            }
+            case 4009:{
+                feedback = new Feedback(3026 ,"");
                 return feedback;
             }
             default:{
@@ -192,13 +205,25 @@ public class FileSystemClient {
             case REPLY_ADD_REDUNDANCY_INFO:{
                 return parseReplyFromStoreServer(replyMessage);
             }
+            case REPLY_DELETE_REDUNDANCY_INFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
             case REPLY_ADD_FINGERPRINTINFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_DELETE_FINGERPRINTINFO:{
                 return parseReplyFromStoreServer(replyMessage);
             }
             case REPLY_ADD_FREQUENCY:{
                 return parseReplyFromStoreServer(replyMessage);
             }
+            case REPLY_DELETE_FREQUENCY:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
             case REPLY_GET_REDUNDANCY_INFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_VALIDATE_FILENAMES:{
                 return parseReplyFromStoreServer(replyMessage);
             }
             default:{
@@ -257,6 +282,30 @@ public class FileSystemClient {
         return feedback;
     }
     /**
+     * 向存储服务器发送验证文件名集合是否有效指令
+     * @param serverNodeId
+     *            存储服务器编号
+     */
+    public static Feedback sendValidateFileNames(String serverNodeId,  ArrayList<FingerprintInfo>fingerprintInfos){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.VALIDATE_FILENAMES;
+            queryMessage.content=fingerprintInfos;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
      * 向存储服务器发送添加冗余文件映射信息指令
      * @param serverNodeId
      *            存储服务器编号
@@ -267,6 +316,31 @@ public class FileSystemClient {
         try {
             MessageProtocol queryMessage = new MessageProtocol();
             queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
+            queryMessage.content=redundancyFileStoreInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送删除冗余文件映射信息指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param redundancyFileStoreInfo 冗余文件信息
+     */
+    public static Feedback sendDeleteRedundancyFileStoreInfoMessage(String serverNodeId, RedundancyFileStoreInfo redundancyFileStoreInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.DELETE_REDUNDANCY_INFO;
             queryMessage.content=redundancyFileStoreInfo;
             sendMessageToStoreServer(serverNodeId,queryMessage);
             Socket so=storeSockets.get(serverNodeId);
@@ -307,6 +381,31 @@ public class FileSystemClient {
         return feedback;
     }
     /**
+     * 向存储服务器发送删除文件引用指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param fingerprintInfo 文件相关信息
+     */
+    public static Feedback sendDeleteFrequencyMessage(String serverNodeId, FingerprintInfo fingerprintInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.DELETE_FREQUENCY;
+            queryMessage.content=fingerprintInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
      * 向存储服务器发送添加指纹信息指令
      * @param serverNodeId
      *            存储服务器编号
@@ -317,6 +416,31 @@ public class FileSystemClient {
         try {
             MessageProtocol queryMessage = new MessageProtocol();
             queryMessage.messageType = MessageType.ADD_FINGERPRINTINFO;
+            queryMessage.content=fingerprintInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送删除指纹信息指令
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param fingerprintInfo 指纹信息
+     */
+    public static Feedback sendDeleteFingerprintInfoMessage(String serverNodeId, FingerprintInfo fingerprintInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.DELETE_FINGERPRINTINFO;
             queryMessage.content=fingerprintInfo;
             sendMessageToStoreServer(serverNodeId,queryMessage);
             Socket so=storeSockets.get(serverNodeId);

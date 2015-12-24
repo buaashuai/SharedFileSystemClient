@@ -66,10 +66,14 @@ public class DirectoryAdapter extends Adapter {
             System.out.println(ErrorHandler.getErrorInfo(3005, ""));
         }
         JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-        if (jsonArray.size() > 0)
-            this.FILEPATH =node.StorePath + jsonArray.getString(0);
-        else
+        if (jsonArray.size() > 0) {
+            this.FILEPATH = node.StorePath + jsonArray.getString(0);
+            this.RELATIVE_FILEPATH= jsonArray.getString(0)+ "/";//文件相对路径
+        }
+        else {
             this.FILEPATH = node.StorePath;
+            this.RELATIVE_FILEPATH= "/";//文件相对路径
+        }
     }
 
     /**
@@ -90,7 +94,7 @@ public class DirectoryAdapter extends Adapter {
                             + filelist[i]);
                     if (readfile.isFile()) {
                         FingerprintInfo fInfo=new FingerprintInfo();
-                        fInfo.setFilePath(relativePath + "/");
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
                         fInfo.setNodeId(this.NODE.Id);
                         fInfo.setFileName(readfile.getName());
                         files.add(fInfo);
@@ -108,7 +112,7 @@ public class DirectoryAdapter extends Adapter {
                     FTPFile[] ftpFiles = ftpClient.listFiles(relativePath);
                     for (FTPFile f : ftpFiles) {
                         FingerprintInfo fInfo=new FingerprintInfo();
-                        fInfo.setFilePath(relativePath + "/");
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
                         fInfo.setNodeId(this.NODE.Id);
                         fInfo.setFileName(f.getName());
                         files.add(fInfo);
@@ -118,8 +122,14 @@ public class DirectoryAdapter extends Adapter {
                 LogRecord.FileHandleErrorLogger.error(e.toString());
             }
         }
-        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件，同时还需要过滤掉已经被删除的文件（由于文件被引用导致未被物理删除）
+        //
         if(this.NODE.Redundancy.Switch){
+            Feedback feedback2=FileSystemClient.sendValidateFileNames(serverNode.Id,files);
+            if(feedback2.getErrorcode()==3000) {//
+                ArrayList<FingerprintInfo> validateFiles = (ArrayList<FingerprintInfo>) feedback2.getFeedbackInfo("validateFiles");
+                files=validateFiles;
+            }
             Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
             if(feedback.getErrorcode()==3000) {//表示存在冗余文件
                 ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
@@ -133,15 +143,27 @@ public class DirectoryAdapter extends Adapter {
      * 获取该目录下所有的文件名称
      */
     public ArrayList<String> getAllFileNames() {
-        ArrayList<String> files = new ArrayList<String>();
+        ArrayList<String> fileNames = new ArrayList<String>();
+        ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();
         ServerNode serverNode = this.NODE.getServerNode();
-        String relativePath = this.FILEPATH.substring(this.NODE.StorePath.length());
+        String relativePath = this.FILEPATH.substring( this.NODE.StorePath.length());
         if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
             File desFolderPath = new File(this.FILEPATH);
             String[] filelist = null;
             if (desFolderPath.isDirectory()) {
+                //首先获取本文件夹里面的文件
                 filelist = desFolderPath.list();
-                Collections.addAll(files, filelist);
+                for (int i = 0; i < filelist.length; i++) {
+                    File readfile = new File(this.FILEPATH + "/"
+                            + filelist[i]);
+                    if (readfile.isFile()) {
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileName(readfile.getName());
+                        files.add(fInfo);
+                    }
+                }
             }
         } else {
             FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
@@ -149,29 +171,39 @@ public class DirectoryAdapter extends Adapter {
             boolean flag = false;
             try {
                 flag = ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
-
                 if (flag) {//是文件夹
                     ftpClient.changeToParentDirectory();
                     FTPFile[] ftpFiles = ftpClient.listFiles(relativePath);
                     for (FTPFile f : ftpFiles) {
-                        files.add(f.getName());
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileName(f.getName());
+                        files.add(fInfo);
                     }
                 }
             } catch (Exception e) {
                 LogRecord.FileHandleErrorLogger.error(e.toString());
             }
         }
-        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件，同时还需要过滤掉已经被删除的文件（由于文件被引用导致未被物理删除）
+        //
         if(this.NODE.Redundancy.Switch){
+            Feedback feedback2=FileSystemClient.sendValidateFileNames(serverNode.Id,files);
+            if(feedback2.getErrorcode()==3000) {//
+                ArrayList<FingerprintInfo> validateFiles = (ArrayList<FingerprintInfo>) feedback2.getFeedbackInfo("validateFiles");
+                files=validateFiles;
+            }
             Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
             if(feedback.getErrorcode()==3000) {//表示存在冗余文件
                 ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
-                for(FingerprintInfo info:otherPath) {
-                    files.add(info.getFileName());
-                }
+                files.addAll(otherPath);
             }
         }
-        return files;
+        for(FingerprintInfo info:files){
+            fileNames.add(info.getFileName());
+        }
+        return fileNames;
     }
 
     /**
