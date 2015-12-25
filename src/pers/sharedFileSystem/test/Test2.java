@@ -72,16 +72,16 @@ public class Test2 {
 //        System.out.println(re);
 
 //        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
-//        for(int i=1;i<=3;i++) {
-//            String name=i+".jpg";
-//            inputStream = new FileInputStream(new File(
-//                    "E:/图片视频/"+name));
-//            fileAdapter = new FileAdapter(inputStream);
-////            map.put("fileSuffix","txt");
-//            JSONObject re = fileAdapter.saveFileTo("temp",
-//                    i+"-"+i+".jpg", map);
-//            System.out.println(re);
-//        }
+        for(int i=1;i<=3;i++) {
+            String name=i+".jpg";
+            inputStream = new FileInputStream(new File(
+                    "E:/图片视频/"+name));
+            fileAdapter = new FileAdapter(inputStream);
+//            map.put("fileSuffix","txt");
+            JSONObject re = fileAdapter.saveFileTo("temp",
+                    i+"-"+i+".jpg", map);
+            System.out.println(re);
+        }
         for(int i=2;i<=3;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
@@ -116,17 +116,19 @@ public class Test2 {
         map.put("hallTypeId", "7");
         DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         List<String> fileNames = new ArrayList<String>();
-        fileNames.add("2.jpg");
-        fileNames.add("32.jpg");
+        fileNames.add("2-2.jpg");
+        fileNames.add("3-3.jpg");
+        fileNames.add("3-2.jpg");
+        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
+        System.out.println(re1);
 //	fileNames.add("24.txt");
-	FileAdapter fileAdapter = new FileAdapter("temp",
-			"1-1.jpg", map);
+//	FileAdapter fileAdapter = new FileAdapter("temp2",
+//			"2-2.jpg", map);
 //	FileAdapter fileAdapter2 = new FileAdapter("hehe",
 //			"4.jpg", map);
-//        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
-//        System.out.println(re1);
-	JSONObject re2 =fileAdapter.delete();
-	System.out.println(re2);
+
+//	JSONObject re2 =fileAdapter.delete();
+//	System.out.println(re2);
 //	JSONObject re3 =fileAdapter2.delete();
 //	System.out.println(re3);
     }
@@ -159,8 +161,17 @@ public class Test2 {
         DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         JSONArray re = dicAdapter.getAllFilePaths();
         ArrayList<String> re2 = dicAdapter.getAllFileNames();
+        JSONArray re3 = dicAdapter.getAllFile();
+        ArrayList<String> paths = new ArrayList<String>();
+        for (int i = 0; i < re3.size(); i++) {
+            JSONObject o = re3.getJSONObject(i);
+            String name= o.getString("fileName");
+            name=new String(name.getBytes("ISO-8859-1"), "gb2312");//转化中文文件名，保证中文不乱码
+            System.out.println(name);
+        }
         System.out.println(re);
         System.out.println(re2);
+        System.out.println(re3);
     }
 
     /**
@@ -296,7 +307,7 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.saveFileToTest();
+        test2.getAllFilePathsTest();
 //        System.out.println(re);
     }
 

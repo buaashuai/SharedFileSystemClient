@@ -51,6 +51,10 @@ public class ServerNode extends Node implements Serializable {
 	 */
 	public boolean isRunning;
 	/**
+	 * 该服务器的http访问路径
+	 */
+	public String URL;
+	/**
 	 * 打印节点信息
 	 * 
 	 * @param tabs
@@ -63,6 +67,7 @@ public class ServerNode extends Node implements Serializable {
 		System.out.println(tabs + "ServerPort: " + ServerPort);
 		System.out.println(tabs + "UserName: " + UserName);
 		System.out.println(tabs + "Password: " + Password);
+		System.out.println(tabs + "URL: " + URL);
 		System.out.println(tabs + "ServerRedundancy: ");
 		this.ServerRedundancy.print(tabs + "\t");
 		System.out.println(tabs + "ChildNodes: "+ChildNodes.size());

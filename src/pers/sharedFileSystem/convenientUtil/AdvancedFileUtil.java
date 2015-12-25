@@ -2,15 +2,19 @@ package pers.sharedFileSystem.convenientUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.entity.DirectoryNode;
+import pers.sharedFileSystem.entity.Feedback;
 import pers.sharedFileSystem.entity.Node;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
+import pers.sharedFileSystem.networkManager.FileSystemClient;
 
 /**
  * 文件操作相关的工具包
@@ -38,29 +42,44 @@ public class AdvancedFileUtil {
 			String fileName, boolean type) {
 		ServerNode serverNode=node.getServerNode();
 		String fullPath = filePath + fileName;
+		boolean result=false;
 		if (filePath.charAt(filePath.length() - 1) != '/')
 			fullPath = filePath + "/" + fileName;
+		String relativePath= filePath.substring(node.StorePath
+				.length());
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
-			return new File(fullPath).exists();
+			result= new File(fullPath).exists();
 		} else {
 			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
 					type);
 			// ftpClient.setControlEncoding(encoding); // 中文支持
-			boolean re = false;
 			try {
-				String relativePath = filePath.substring(node.StorePath
-						.length());
 				ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 				FTPFile[] ftpFiles = ftpClient.listFiles(fileName);//new String(fileName.getBytes(),"ISO-8859-1")
 				if (ftpFiles.length > 0)
-					re = true;
+					result = true;
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				LogRecord.FileHandleErrorLogger.error(e.toString());
 			}
-			return re;
 		}
+		if(node.Redundancy.Switch&&result){
+			ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();
+			FingerprintInfo fInfo=new FingerprintInfo();
+			fInfo.setFilePath(relativePath);
+			fInfo.setNodeId(node.Id);
+			fInfo.setFileName(fileName);
+			files.add(fInfo);
+			Feedback feedback2= FileSystemClient.sendValidateFileNames(serverNode.Id, files);
+			if(feedback2.getErrorcode()==3000) {//
+				ArrayList<FingerprintInfo> validateFiles = (ArrayList<FingerprintInfo>) feedback2.getFeedbackInfo("validateFiles");
+				files=validateFiles;
+			}
+			if(files.size()<1)
+				result=false;
+		}
+		return result;
 	}
 
 	/**

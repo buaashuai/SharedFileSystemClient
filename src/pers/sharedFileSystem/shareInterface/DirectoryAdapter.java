@@ -15,10 +15,7 @@ import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonUtil;
-import pers.sharedFileSystem.entity.DirectoryNode;
-import pers.sharedFileSystem.entity.Feedback;
-import pers.sharedFileSystem.entity.Node;
-import pers.sharedFileSystem.entity.ServerNode;
+import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.exceptionManager.ErrorHandler;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
@@ -31,23 +28,28 @@ import pers.sharedFileSystem.networkManager.FileSystemClient;
  */
 public class DirectoryAdapter extends Adapter {
     /**
+     * 目录路径相关参数
+     */
+    private Map<String, String> parms;
+    /**
      * 删除本目录
      */
-    public JSONObject delete() {
-        Feedback feedback = null;
-        if (AdvancedFileUtil.delete(this.NODE,
-                this.FILEPATH))
-            feedback = new Feedback(3000, "");
-        else
-            feedback = new Feedback(3001, "");
-        return feedback.toJsonObject();
-    }
+//    public JSONObject delete() {
+//        Feedback feedback = null;
+//        if (AdvancedFileUtil.delete(this.NODE,
+//                this.FILEPATH))
+//            feedback = new Feedback(3000, "");
+//        else
+//            feedback = new Feedback(3001, "");
+//        return feedback.toJsonObject();
+//    }
 
     /**
      * @param nodeId 目录节点名称
      * @param parms  节点路径参数
      */
     public DirectoryAdapter(String nodeId, Map<String, String> parms) {
+        this.parms=parms;
         Node n=Config.getNodeByNodeId(nodeId);
         if(n==null||n instanceof ServerNode) {
             LogRecord.FileHandleErrorLogger.error("["+nodeId+"] is not a DirectoryNode id");
@@ -140,7 +142,7 @@ public class DirectoryAdapter extends Adapter {
     }
 
     /**
-     * 获取该目录下所有的文件名称
+     * 获取该目录下所有的文件名称（不包括目录文件）
      */
     public ArrayList<String> getAllFileNames() {
         ArrayList<String> fileNames = new ArrayList<String>();
@@ -205,6 +207,88 @@ public class DirectoryAdapter extends Adapter {
         }
         return fileNames;
     }
+    /**
+     * 获取该目录下所有的文件（包括目录文件）
+     */
+    public JSONArray getAllFile() {
+        ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();//普通文件
+        ArrayList<FingerprintInfo> dirFiles = new ArrayList<FingerprintInfo>();//目录文件
+        ServerNode serverNode = this.NODE.getServerNode();
+        String relativePath = this.FILEPATH.substring( this.NODE.StorePath.length());
+        if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
+            File desFolderPath = new File(this.FILEPATH);
+            String[] filelist = null;
+            if (desFolderPath.isDirectory()) {
+                //首先获取本文件夹里面的文件
+                filelist = desFolderPath.list();
+                for (int i = 0; i < filelist.length; i++) {
+                    File readfile = new File(this.FILEPATH + "/"
+                            + filelist[i]);
+                    if (readfile.isFile()) {
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileType(FileType.DOCUMENT);
+                        fInfo.setFileName(readfile.getName());
+                        files.add(fInfo);
+                    }else if(readfile.isDirectory()){
+                        FingerprintInfo fInfo=new FingerprintInfo();
+                        fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                        fInfo.setNodeId(this.NODE.Id);
+                        fInfo.setFileType(FileType.DIRECTORY);
+                        fInfo.setFileName(readfile.getName());
+                        dirFiles.add(fInfo);
+                    }
+                }
+            }
+        } else {
+            FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
+                    false);
+            boolean flag = false;
+            try {
+                flag = ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
+                if (flag) {//是文件夹
+                    ftpClient.changeToParentDirectory();
+                    FTPFile[] ftpFiles = ftpClient.listFiles(relativePath);
+                    for (FTPFile f : ftpFiles) {
+                        if(f.isFile()) {
+                            FingerprintInfo fInfo = new FingerprintInfo();
+                            fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                            fInfo.setNodeId(this.NODE.Id);
+                            fInfo.setFileType(FileType.DOCUMENT);
+                            fInfo.setFileName(f.getName());
+                            files.add(fInfo);
+                        }else if(f.isDirectory()){
+                            FingerprintInfo fInfo = new FingerprintInfo();
+                            fInfo.setFilePath(this.RELATIVE_FILEPATH);
+                            fInfo.setNodeId(this.NODE.Id);
+                            fInfo.setFileType(FileType.DIRECTORY);
+                            fInfo.setFileName(f.getName());
+                            dirFiles.add(fInfo);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                LogRecord.FileHandleErrorLogger.error(e.toString());
+            }
+        }
+        //如果是去冗文件夹，还需要获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件，同时还需要过滤掉已经被删除的文件（由于文件被引用导致未被物理删除）
+        //
+        if(this.NODE.Redundancy.Switch){
+            Feedback feedback2=FileSystemClient.sendValidateFileNames(serverNode.Id,files);
+            if(feedback2.getErrorcode()==3000) {//
+                ArrayList<FingerprintInfo> validateFiles = (ArrayList<FingerprintInfo>) feedback2.getFeedbackInfo("validateFiles");
+                files=validateFiles;
+            }
+            Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
+            if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+                ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+                files.addAll(otherPath);
+            }
+        }
+        files.addAll(dirFiles);
+        return JSONArray.fromObject(files);
+    }
 
     /**
      * 删除本目录下指定的文件
@@ -213,15 +297,15 @@ public class DirectoryAdapter extends Adapter {
      */
     public JSONObject deleteSelective(List<String> fileNames) {
         Feedback feedback = null;
-        boolean flag = true;
         Hashtable<String,Boolean> infos=new Hashtable<String,Boolean>();
         int num=0;
         for (String name : fileNames) {
-            if (!AdvancedFileUtil.delete(this.NODE,
-                    this.FILEPATH + "/" + name))
+            FileAdapter fileAdapter=new FileAdapter(this.NODEID,name,this.parms);
+            JSONObject re2 =fileAdapter.delete();
+            if(re2.getInt("Errorcode") != 3000){
                 // 删除失败
                 infos.put(name,false);
-            else {
+            }else {
                 // 删除成功
                 num++;
                 infos.put(name, true);
