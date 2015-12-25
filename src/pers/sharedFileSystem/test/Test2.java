@@ -78,7 +78,7 @@ public class Test2 {
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream);
 //            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp",
+            JSONObject re = fileAdapter.saveFileTo("hallType",
                     i+"-"+i+".jpg", map);
             System.out.println(re);
         }
@@ -88,7 +88,7 @@ public class Test2 {
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream);
 //            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp2",
+            JSONObject re = fileAdapter.saveFileTo("temp",
                     i+"-"+i+".jpg", map);
             System.out.println(re);
         }
@@ -114,11 +114,10 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("hallType", map);
         List<String> fileNames = new ArrayList<String>();
-        fileNames.add("2-2.jpg");
+        fileNames.add("1-1.jpg");
         fileNames.add("3-3.jpg");
-        fileNames.add("3-2.jpg");
         JSONObject re1 = dicAdapter.deleteSelective(fileNames);
         System.out.println(re1);
 //	fileNames.add("24.txt");
@@ -160,18 +159,18 @@ public class Test2 {
         map.put("hehe", "2");
         DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         JSONArray re = dicAdapter.getAllFilePaths();
-        ArrayList<String> re2 = dicAdapter.getAllFileNames();
-        JSONArray re3 = dicAdapter.getAllFile();
-        ArrayList<String> paths = new ArrayList<String>();
-        for (int i = 0; i < re3.size(); i++) {
-            JSONObject o = re3.getJSONObject(i);
-            String name= o.getString("fileName");
-            name=new String(name.getBytes("ISO-8859-1"), "gb2312");//转化中文文件名，保证中文不乱码
-            System.out.println(name);
-        }
+//        ArrayList<String> re2 = dicAdapter.getAllFileNames();
+//        JSONArray re3 = dicAdapter.getAllFile();
+//        ArrayList<String> paths = new ArrayList<String>();
+//        for (int i = 0; i < re3.size(); i++) {
+//            JSONObject o = re3.getJSONObject(i);
+//            String name= o.getString("fileName");
+//            name=new String(name.getBytes("ISO-8859-1"), "gb2312");//转化中文文件名，保证中文不乱码
+//            System.out.println(name);
+//        }
         System.out.println(re);
-        System.out.println(re2);
-        System.out.println(re3);
+//        System.out.println(re2);
+//        System.out.println(re3);
     }
 
     /**
