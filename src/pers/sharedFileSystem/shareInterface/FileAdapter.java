@@ -125,11 +125,11 @@ public class FileAdapter extends Adapter {
 		//同一个目录引用同一个目录下的冗余文件，优先删除链接文件
 		if(!isLinkedFile) {
 			if (!AdvancedFileUtil.isFileExist(node, node.StorePath + this.RELATIVE_FILEPATH, fileName, false)) {
-					this.NODE = null;
-					this.NODEID = "";
-					this.fileName = "";
-					this.FILEPATH = "";
-					this.RELATIVE_FILEPATH = "";
+//					this.NODE = null;
+//					this.NODEID = "";
+//					this.fileName = "";
+//					this.FILEPATH = "";
+//					this.RELATIVE_FILEPATH = "";
 					LogRecord.FileHandleErrorLogger.error("source file not exist: "
 							+ node.getServerNode().Ip + "/" + this.FILEPATH);
 					return;
