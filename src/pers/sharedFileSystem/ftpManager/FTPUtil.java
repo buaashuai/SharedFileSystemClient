@@ -14,7 +14,7 @@ import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 /**
- * 
+ * 客户端和存储服务器之间的FTP管理类
  * @author buaashuai
  *
  */

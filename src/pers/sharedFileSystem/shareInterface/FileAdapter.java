@@ -122,7 +122,7 @@ public class FileAdapter extends Adapter {
 				}
 			}
 		}
-		//同一个目录引用同一个目录下的冗余文件，优先删除链接文件
+		//构造函数优先考虑链接文件，这样的好处是：同一个目录引用同一个目录下的冗余文件，优先删除链接文件，而不会对原始文件造成破坏
 		if(!isLinkedFile) {
 			if (!AdvancedFileUtil.isFileExist(node, node.StorePath + this.RELATIVE_FILEPATH, fileName, false)) {
 //					this.NODE = null;
@@ -467,9 +467,9 @@ public class FileAdapter extends Adapter {
 		if (nodePathFeed.getInt("Errorcode") != 3000) {
 			return nodePathFeed;
 		}
-		// 获取文件夹路径
+		// 获取目的节点相对路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-		// 生成文件绝对路径
+		// 文件绝对路径
 		String destFilePath = node.StorePath;
 		//文件相对路径
 		String relativePath="/";
