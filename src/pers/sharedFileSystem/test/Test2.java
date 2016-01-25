@@ -306,7 +306,8 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.getAllFilePathsTest();
+//        test2.getAllFilePathsTest();
+        System.out.println("@".length());
 //        System.out.println(re);
     }
 

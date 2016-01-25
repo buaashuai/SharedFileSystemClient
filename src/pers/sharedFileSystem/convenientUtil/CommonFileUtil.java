@@ -127,7 +127,7 @@ public class CommonFileUtil {
         for (int i = 0; i < paths.length; i++) {
             // 找到动态命名节点
             if (paths[i].contains(Config.getPREFIX())) {
-                key = paths[i].substring(1);
+                key = paths[i].substring(Config.getPREFIX().length());
                 alt = parms.get(key);
                 if (CommonUtil.validateString(alt))
                     orignPath = orignPath.replaceAll(paths[i], alt);
