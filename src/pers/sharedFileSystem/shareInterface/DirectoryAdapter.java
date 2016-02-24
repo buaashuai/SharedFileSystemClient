@@ -32,32 +32,33 @@ public class DirectoryAdapter extends Adapter {
      */
     private Map<String, String> parms;
     /**
-     * 删除本目录
+     * 删除本目录(会递归删除目录中的全部文件)
      */
-//    public JSONObject delete() {
-//        Feedback feedback = null;
-//        if (AdvancedFileUtil.delete(this.NODE,
-//                this.FILEPATH))
-//            feedback = new Feedback(3000, "");
-//        else
-//            feedback = new Feedback(3001, "");
-//        return feedback.toJsonObject();
-//    }
+    public JSONObject delete() {
+        FileAdapter fileAdapter = new FileAdapter(this.NODEID,
+                "", this.parms);
+        JSONObject re =fileAdapter.delete();
+        return re;
+    }
 
     /**
      * @param nodeId 目录节点名称
      * @param parms  节点路径参数
      */
     public DirectoryAdapter(String nodeId, Map<String, String> parms) {
-        this.parms=parms;
         Node n=Config.getNodeByNodeId(nodeId);
         if(n==null||n instanceof ServerNode) {
             LogRecord.FileHandleErrorLogger.error("["+nodeId+"] is not a DirectoryNode id");
             return;
         }
         DirectoryNode node = (DirectoryNode)n;
+        String desNodeId2=CommonUtil.getDestDirectoryNode(node,parms,false);//获取保存文件的实际结点编号
+        if(!desNodeId2.equals(nodeId)) {
+            nodeId=desNodeId2;//重定向到新的目录结点
+        }
         ServerNode rootNode = node.getServerNode();
         // DirectoryAdapter.rootNode = rootNode;
+        this.parms=parms;
         this.NODEID = nodeId;
         // Node node = rootNode.NodeTable.get(nodeId);
         this.NODE = node;
@@ -138,7 +139,17 @@ public class DirectoryAdapter extends Adapter {
                 files.addAll(otherPath);
             }
         }
-        return JSONArray.fromObject(files);
+        JSONArray result=JSONArray.fromObject(files);
+        //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
+        if(this.NODE.NameType==NodeNameType.STATIC ) {
+            List<IntervalProperty> Intervals=this.NODE.Intervals;
+            if(Intervals.size()>0) {
+                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+                JSONArray other=dicAdapter.getAllFilePaths();
+                result.addAll(other);
+            }
+        }
+        return result;
     }
 
     /**
@@ -200,6 +211,15 @@ public class DirectoryAdapter extends Adapter {
             if(feedback.getErrorcode()==3000) {//表示存在冗余文件
                 ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
                 files.addAll(otherPath);
+            }
+        }
+        //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
+        if(this.NODE.NameType==NodeNameType.STATIC ) {
+            List<IntervalProperty> Intervals=this.NODE.Intervals;
+            if(Intervals.size()>0) {
+                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+                ArrayList<String> other=dicAdapter.getAllFileNames();
+                fileNames.addAll(other);
             }
         }
         for(FingerprintInfo info:files){
@@ -287,7 +307,18 @@ public class DirectoryAdapter extends Adapter {
             }
         }
         files.addAll(dirFiles);
-        return JSONArray.fromObject(files);
+
+        JSONArray result=JSONArray.fromObject(files);
+        //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
+        if(this.NODE.NameType==NodeNameType.STATIC ) {
+            List<IntervalProperty> Intervals=this.NODE.Intervals;
+            if(Intervals.size()>0) {
+                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+                JSONArray other=dicAdapter.getAllFile();
+                result.addAll(other);
+            }
+        }
+        return result;
     }
 
     /**

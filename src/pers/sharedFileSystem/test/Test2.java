@@ -67,31 +67,34 @@ public class Test2 {
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-//        JSONObject re = fileAdapter.saveFileTo("temp",
-//                "2-1.jpg", map);
+        map.put("activityId", "1");
+        map.put("eventId", "1");
+        map.put("categoryId", "1");
+//        JSONObject re = fileAdapter.saveFileTo("eventActivityAlbum",
+//                "222.jpg", map);
 //        System.out.println(re);
 
 //        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
-        for(int i=1;i<=3;i++) {
+        for(int i=1;i<=10;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
-                    "E:/图片视频/"+name));
+                    "E:/图片视频/2.jpg"));
             fileAdapter = new FileAdapter(inputStream);
-//            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("hallType",
+//            map.put("activityId", ""+i);
+            JSONObject re = fileAdapter.saveFileTo("eventActivityAlbum",
                     i+"-"+i+".jpg", map);
             System.out.println(re);
         }
-        for(int i=2;i<=3;i++) {
-            String name=i+".jpg";
-            inputStream = new FileInputStream(new File(
-                    "E:/图片视频/"+name));
-            fileAdapter = new FileAdapter(inputStream);
-//            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp",
-                    i+"-"+i+".jpg", map);
-            System.out.println(re);
-        }
+//        for(int i=2;i<=3;i++) {
+//            String name=i+".jpg";
+//            inputStream = new FileInputStream(new File(
+//                    "E:/图片视频/"+name));
+//            fileAdapter = new FileAdapter(inputStream);
+////            map.put("fileSuffix","txt");
+//            JSONObject re = fileAdapter.saveFileTo("temp",
+//                    i+"-"+i+".jpg", map);
+//            System.out.println(re);
+//        }
 //        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
 //        JSONObject re2 = fileAdapter2.saveFileTo("temp",
 //                "3.jpg", map);
@@ -108,26 +111,59 @@ public class Test2 {
      */
     private void deleteFileTest() throws Exception {
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("sceneTypeId", "2");
-        map.put("hallTypeId", "3");
         map.put("categoryId", "5");
+        map.put("hallTypeId", "3");
         map.put("hehe", "2");
         map.put("sceneTypeId", "1");
         map.put("hallTypeId", "7");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("hallType", map);
+        map.put("activityId", "1");
+        map.put("eventId", "1");
+        map.put("categoryId", "1");
+//        DirectoryAdapter dicAdapter = new DirectoryAdapter("hallType", map);
         List<String> fileNames = new ArrayList<String>();
         fileNames.add("1-1.jpg");
         fileNames.add("3-3.jpg");
-        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
+//        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
+//        System.out.println(re1);
+//	fileNames.add("24.txt");
+//	FileAdapter fileAdapter = new FileAdapter("temp2",
+//			"2-2.jpg", map);
+	FileAdapter fileAdapter2 = new FileAdapter("temp2",
+			"", map);
+
+	JSONObject re2 =fileAdapter2.delete();
+	System.out.println(re2);
+//	JSONObject re3 =fileAdapter2.delete();
+//	System.out.println(re3);
+    }
+
+    /**
+     * 测试删除目录接口
+     */
+    private void deleteDirectoryTest() throws Exception {
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("categoryId", "5");
+        map.put("hallTypeId", "3");
+        map.put("hehe", "2");
+        map.put("sceneTypeId", "1");
+        map.put("hallTypeId", "7");
+        map.put("activityId", "1");
+        map.put("eventId", "1");
+        map.put("categoryId", "1");
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
+        List<String> fileNames = new ArrayList<String>();
+        fileNames.add("1-1.jpg");
+        fileNames.add("3-3.jpg");
+        JSONObject re1 = dicAdapter.delete();
         System.out.println(re1);
 //	fileNames.add("24.txt");
 //	FileAdapter fileAdapter = new FileAdapter("temp2",
 //			"2-2.jpg", map);
-//	FileAdapter fileAdapter2 = new FileAdapter("hehe",
-//			"4.jpg", map);
-
-//	JSONObject re2 =fileAdapter.delete();
-//	System.out.println(re2);
+//        FileAdapter fileAdapter2 = new FileAdapter("temp2",
+//                "", map);
+//
+//        JSONObject re2 =fileAdapter2.delete();
+//        System.out.println(re2);
 //	JSONObject re3 =fileAdapter2.delete();
 //	System.out.println(re3);
     }
@@ -139,11 +175,15 @@ public class Test2 {
      */
     private void getAllFileNamesTest() throws Exception {
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("sceneTypeId", "2");
-        map.put("hallTypeId", "3");
         map.put("categoryId", "5");
+        map.put("hallTypeId", "3");
         map.put("hehe", "2");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("tempStoreNode", map);
+        map.put("sceneTypeId", "1");
+        map.put("hallTypeId", "7");
+        map.put("activityId", "1");
+        map.put("eventId", "1");
+        map.put("categoryId", "1");
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("eventActivityAlbum", map);
         List<String> fileNames = dicAdapter.getAllFileNames();
         System.out.println(fileNames);
     }
@@ -153,12 +193,16 @@ public class Test2 {
      */
     private void getAllFilePathsTest() throws Exception {
         HashMap<String, String> map = new HashMap<String, String>();
-        map.put("sceneTypeId", "2");
-        map.put("hallTypeId", "3");
         map.put("categoryId", "5");
+        map.put("hallTypeId", "3");
         map.put("hehe", "2");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
-        JSONArray re = dicAdapter.getAllFilePaths();
+        map.put("sceneTypeId", "1");
+        map.put("hallTypeId", "7");
+        map.put("activityId", "1");
+        map.put("eventId", "1");
+        map.put("categoryId", "1");
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("eventActivityAlbum", map);
+        JSONArray re = dicAdapter.getAllFile();
 //        ArrayList<String> re2 = dicAdapter.getAllFileNames();
 //        JSONArray re3 = dicAdapter.getAllFile();
 //        ArrayList<String> paths = new ArrayList<String>();
@@ -180,7 +224,7 @@ public class Test2 {
      */
     private void configTest() throws Exception {
         Hashtable<String, ServerNode> config = Config.getConfig();
-        ServerNode serverNode = config.get("tempNode");
+        ServerNode serverNode = config.get("storeNode");
         serverNode.print("");
         System.out.println("*****************");
         SystemConfig systemConfig = Config.SYSTEMCONFIG;
@@ -303,11 +347,15 @@ public class Test2 {
         System.out.println(fileReferenceInfoMap.get("13456"));
     }
 
+    private void stringTest(){
+        String str1="1234";
+        String str2="1234";
+        System.out.println(str1.compareTo(str2));
+    }
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-//        test2.getAllFilePathsTest();
-        System.out.println("@".length());
+        test2.getAllFilePathsTest();
 //        System.out.println(re);
     }
 

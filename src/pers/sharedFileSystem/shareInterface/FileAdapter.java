@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -460,6 +461,10 @@ public class FileAdapter extends Adapter {
 			return feedback.toJsonObject();
 		}
 		DirectoryNode node = (DirectoryNode)n;// 保存文件的目的节点
+		String desNodeId2=CommonUtil.getDestDirectoryNode(node, parms,true);//获取保存文件的实际结点编号
+		if(!desNodeId2.equals(desNodeId))
+			return saveFileTo(desNodeId2,fileName,parms);//重定向到新的目录结点
+
 		ServerNode serverNode = node.getServerNode();// 保存文件的目的节点所属的根节点
 		// 初始化节点的相对路径
 		JSONObject nodePathFeed = CommonFileUtil.initFilePath(desNodeId,
