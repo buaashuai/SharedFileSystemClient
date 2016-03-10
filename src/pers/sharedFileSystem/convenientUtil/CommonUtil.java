@@ -1,16 +1,10 @@
 package pers.sharedFileSystem.convenientUtil;
 
-import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.entity.DirectoryNode;
-import pers.sharedFileSystem.entity.IntervalProperty;
-import pers.sharedFileSystem.entity.Node;
-import pers.sharedFileSystem.entity.NodeNameType;
 import pers.sharedFileSystem.logManager.LogRecord;
-import pers.sharedFileSystem.shareInterface.DirectoryAdapter;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -107,61 +101,61 @@ public class CommonUtil {
 	 */
 	public static  String getDestDirectoryNode(DirectoryNode node,Map<String, String> parms,boolean flag){
 		String destNodeId=node.Id;//默认保存到当前结点
-		String orignPath = "";// 根节点到nodeId节点的相对路径
-		orignPath = node.Path;
-		String[] paths = orignPath.split("/");
-		String key = "";
-		String alt = "";
-		for (int i = 0; i < paths.length; i++) {
-			// 找到动态命名节点
-			if (paths[i].contains(Config.getPREFIX())) {
-				key = paths[i].substring(Config.getPREFIX().length());
-				DirectoryNode keyNode=node;
-				boolean notFind=true;
-				//查找key对应的结点对象
-				while(notFind){
-					if(keyNode.NameType== NodeNameType.DYNAMIC&&keyNode.Property.equals(key)) {
-						notFind=false;
-					}else{
-						Node nn=keyNode.Parent;
-						if(nn instanceof DirectoryNode){
-							keyNode=(DirectoryNode)nn;
-						}else
-							break;
-					}
-				}
-				if(notFind){
-					LogRecord.RunningErrorLogger.error("miss parm[" + key
-							+ "]");
-					return "";
-				}
-				List<IntervalProperty> Intervals=keyNode.Intervals;
-				alt = parms.get(key);
-				if (CommonUtil.validateString(alt)&&Intervals!=null) {
-					for(IntervalProperty intervalProperty : Intervals){//按照字典序比较大小
-						if(alt.compareTo(intervalProperty.Min)>0&&alt.compareTo(intervalProperty.Max)<=0){
-							return  intervalProperty.DirectoryNodeId;
-						}
-					}
-				}
-				else {
-					LogRecord.RunningErrorLogger.error("miss parm[" + key
-							+ "]");
-					return "";
-				}
-			}
-		}
-		if(node.NameType==NodeNameType.STATIC && flag) {
-			List<IntervalProperty> Intervals=node.Intervals;
-			if(Intervals.size()>0) {
-				double max = Double.parseDouble(Intervals.get(0).Max);
-				DirectoryAdapter dicAdapter = new DirectoryAdapter(destNodeId, parms);
-				int count = dicAdapter.getAllFileNames().size();
-				if (count >= max) {
-					return Intervals.get(0).DirectoryNodeId;
-				}
-			}
-		}
+//		String orignPath = "";// 根节点到nodeId节点的相对路径
+//		orignPath = node.Path;
+//		String[] paths = orignPath.split("/");
+//		String key = "";
+//		String alt = "";
+//		for (int i = 0; i < paths.length; i++) {
+//			// 找到动态命名节点
+//			if (paths[i].contains(Config.getPREFIX())) {
+//				key = paths[i].substring(Config.getPREFIX().length());
+//				DirectoryNode keyNode=node;
+//				boolean notFind=true;
+//				//查找key对应的结点对象
+//				while(notFind){
+//					if(keyNode.NameType== NodeNameType.DYNAMIC&&keyNode.Property.equals(key)) {
+//						notFind=false;
+//					}else{
+//						Node nn=keyNode.Parent;
+//						if(nn instanceof DirectoryNode){
+//							keyNode=(DirectoryNode)nn;
+//						}else
+//							break;
+//					}
+//				}
+//				if(notFind){
+//					LogRecord.RunningErrorLogger.error("miss parm[" + key
+//							+ "]");
+//					return "";
+//				}
+//				List<IntervalProperty> Intervals=keyNode.Intervals;
+//				alt = parms.get(key);
+//				if (CommonUtil.validateString(alt)&&Intervals!=null) {
+//					for(IntervalProperty intervalProperty : Intervals){//按照字典序比较大小
+//						if(alt.compareTo(intervalProperty.Min)>0&&alt.compareTo(intervalProperty.Max)<=0){
+//							return  intervalProperty.DirectoryNodeId;
+//						}
+//					}
+//				}
+//				else {
+//					LogRecord.RunningErrorLogger.error("miss parm[" + key
+//							+ "]");
+//					return "";
+//				}
+//			}
+//		}
+//		if(node.NameType==NodeNameType.STATIC && flag) {
+//			List<IntervalProperty> Intervals=node.Intervals;
+//			if(Intervals.size()>0) {
+//				double max = Double.parseDouble(Intervals.get(0).Max);
+//				DirectoryAdapter dicAdapter = new DirectoryAdapter(destNodeId, parms);
+//				int count = dicAdapter.getAllFileNames().size();
+//				if (count >= max) {
+//					return Intervals.get(0).DirectoryNodeId;
+//				}
+//			}
+//		}
 		return  destNodeId;
 	}
 }

@@ -8,6 +8,7 @@
 		<userName>WangShuai</userName><!-- 该服务器的登录用户名 Administrator-->
 		<password>0987654321</password><!-- 该服务器的登录密码 C:/Users/dell/Desktop/temp-->
 		<url>http://www.xxx.com</url><!--该服务器的http访问路径-->
+		<storageRatio>0.8</storageRatio>
 		<directoryNode id="tempStoreNode" storePath="E:/ftpServer"><!--该服务器的存储根路径 -->
 			<directoryNode id="temp" nameType="static" name="temp"><!--缓存文件夹 -->
 				<redundancy switch="off"><!--是否进行文件删冗 -->
@@ -52,6 +53,7 @@
 		<userName>1709</userName><!-- 该服务器的登录用户名 -->
 		<password>naruto</password><!-- 该服务器的登录密码 -->
 		<url>http://www.xxx.com</url><!--该服务器的http访问路径-->
+		<storageRatio>0.8</storageRatio>
 		<directoryNode id="renderStoreNode" storePath="E:/ftpServer"><!--该服务器的存储根路径 -->
 			<directoryNode id="renderConfig" nameType="static" name="RenderConfig"><!-- 官方场景配置文件 -->
 				<redundancy switch="on"><!--是否进行文件删冗 -->
@@ -77,6 +79,7 @@
 		<userName>1709</userName><!-- 该服务器的登录用户名 -->
 		<password>naruto</password><!-- 该服务器的登录密码 -->
 		<url>http://www.xxx.com</url><!--该服务器的http访问路径-->
+		<storageRatio>0.8</storageRatio>
 		<directoryNode id="fileStoreNode" storePath="e:/ftpServer"><!--该服务器的存储根路径 -->
 			<directoryNode id="filePath" nameType="static" name="OlineSacrificeFiles"><!--网祭平台文件根目录 -->
 				<redundancy switch="off"><!--是否进行文件删冗  on | off-->
@@ -94,22 +97,7 @@
 						<directoryNode id="event" nameType="dynamic" property="eventId"><!--栏目包括的事件 -->
 							<directoryNode id="eventAlbum" nameType="static" name="EventAlbum"></directoryNode><!--事件相册 -->
 							<directoryNode id="eventActivity" nameType="dynamic" property="activityId"><!--事件活动 -->
-									<interval>
-										<min>5</min>
-										<max>8</max>
-										<directoryNodeId>temp</directoryNodeId>
-									</interval>
-									<interval>
-										<min>8</min>
-										<max>900</max>
-										<directoryNodeId>temp2</directoryNodeId>
-									</interval>
-								<directoryNode id="eventActivityAlbum" nameType="static" name="ActivityAlbum">
-										<interval>
-											<max>5</max>
-											<directoryNodeId>temp2</directoryNodeId>
-										</interval>
-								</directoryNode><!--活动相册 -->
+								<directoryNode id="eventActivityAlbum" nameType="static" name="ActivityAlbum" ></directoryNode><!--活动相册 -->
 							</directoryNode>
 						</directoryNode>
 					</directoryNode>
@@ -167,4 +155,5 @@
 			</directoryNode>
 		</directoryNode>
 	</serverNode>
+
 </FileConfig>

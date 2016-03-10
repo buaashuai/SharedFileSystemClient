@@ -129,7 +129,7 @@ public class FileAdapter extends Adapter {
 //					this.NODE = null;
 //					this.NODEID = "";
 //					this.fileName = "";
-//					this.FILEPATH = "";
+					this.FILEPATH = "";//可以通过此字段是否为空判断文件是否存在
 //					this.RELATIVE_FILEPATH = "";
 					LogRecord.FileHandleErrorLogger.error("source file not exist: "
 							+ node.getServerNode().Ip + "/" + this.FILEPATH);

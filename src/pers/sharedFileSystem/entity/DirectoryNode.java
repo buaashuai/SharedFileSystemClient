@@ -53,9 +53,9 @@ public class DirectoryNode extends Node implements Serializable {
 	 */
 	public Node Parent;
 	/**
-	 * 扩展区间属性集合
+	 * 扩容结点集合
 	 */
-	public List<IntervalProperty>Intervals;
+	public List<String>ExpandNodes ;
 
 	public DirectoryNode(){
 		WhiteList = new ArrayList<FileType>();
@@ -88,13 +88,13 @@ public class DirectoryNode extends Node implements Serializable {
 			num++;
 			directoryNode.print(tabs + "\t");
 		}
+		System.out.println(tabs + "ExpandNodes: "+ExpandNodes.size());
 		num=0;
-		System.out.println(tabs + "Intervals: "+Intervals.size());
-		for (IntervalProperty intervalProperty : Intervals) {
+		for (String expand : ExpandNodes) {
 			if(num>0)
 				System.out.println("");
 			num++;
-			intervalProperty.print(tabs + "\t");
+			System.out.print(tabs + expand);
 		}
 	}
 }

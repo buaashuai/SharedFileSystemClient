@@ -141,14 +141,14 @@ public class DirectoryAdapter extends Adapter {
         }
         JSONArray result=JSONArray.fromObject(files);
         //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
-        if(this.NODE.NameType==NodeNameType.STATIC ) {
-            List<IntervalProperty> Intervals=this.NODE.Intervals;
-            if(Intervals.size()>0) {
-                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
-                JSONArray other=dicAdapter.getAllFilePaths();
-                result.addAll(other);
-            }
-        }
+//        if(this.NODE.NameType==NodeNameType.STATIC ) {
+//            List<IntervalProperty> Intervals=this.NODE.Intervals;
+//            if(Intervals.size()>0) {
+//                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+//                JSONArray other=dicAdapter.getAllFilePaths();
+//                result.addAll(other);
+//            }
+//        }
         return result;
     }
 
@@ -214,14 +214,14 @@ public class DirectoryAdapter extends Adapter {
             }
         }
         //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
-        if(this.NODE.NameType==NodeNameType.STATIC ) {
-            List<IntervalProperty> Intervals=this.NODE.Intervals;
-            if(Intervals.size()>0) {
-                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
-                ArrayList<String> other=dicAdapter.getAllFileNames();
-                fileNames.addAll(other);
-            }
-        }
+//        if(this.NODE.NameType==NodeNameType.STATIC ) {
+//            List<IntervalProperty> Intervals=this.NODE.Intervals;
+//            if(Intervals.size()>0) {
+//                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+//                ArrayList<String> other=dicAdapter.getAllFileNames();
+//                fileNames.addAll(other);
+//            }
+//        }
         for(FingerprintInfo info:files){
             fileNames.add(info.getFileName());
         }
@@ -310,14 +310,14 @@ public class DirectoryAdapter extends Adapter {
 
         JSONArray result=JSONArray.fromObject(files);
         //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
-        if(this.NODE.NameType==NodeNameType.STATIC ) {
-            List<IntervalProperty> Intervals=this.NODE.Intervals;
-            if(Intervals.size()>0) {
-                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
-                JSONArray other=dicAdapter.getAllFile();
-                result.addAll(other);
-            }
-        }
+//        if(this.NODE.NameType==NodeNameType.STATIC ) {
+//            List<IntervalProperty> Intervals=this.NODE.Intervals;
+//            if(Intervals.size()>0) {
+//                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
+//                JSONArray other=dicAdapter.getAllFile();
+//                result.addAll(other);
+//            }
+//        }
         return result;
     }
 
