@@ -28,15 +28,11 @@ import pers.sharedFileSystem.networkManager.FileSystemClient;
  */
 public class DirectoryAdapter extends Adapter {
     /**
-     * 目录路径相关参数
-     */
-    private Map<String, String> parms;
-    /**
      * 删除本目录(会递归删除目录中的全部文件)
      */
     public JSONObject delete() {
         FileAdapter fileAdapter = new FileAdapter(this.NODEID,
-                "", this.parms);
+                "", this.PARM);
         JSONObject re =fileAdapter.delete();
         return re;
     }
@@ -58,13 +54,13 @@ public class DirectoryAdapter extends Adapter {
         }
         ServerNode rootNode = node.getServerNode();
         // DirectoryAdapter.rootNode = rootNode;
-        this.parms=parms;
+        this.PARM=parms;
         this.NODEID = nodeId;
         // Node node = rootNode.NodeTable.get(nodeId);
         this.NODE = node;
         // 初始化节点的相对路径
         JSONObject nodePathFeed = CommonFileUtil.initFilePath(nodeId, parms,
-                false);
+                false,this.getOperationInfo());
         if (nodePathFeed.getInt("Errorcode") != 3000) {
             System.out.println(ErrorHandler.getErrorInfo(3005, ""));
         }
@@ -331,7 +327,7 @@ public class DirectoryAdapter extends Adapter {
         Hashtable<String,Boolean> infos=new Hashtable<String,Boolean>();
         int num=0;
         for (String name : fileNames) {
-            FileAdapter fileAdapter=new FileAdapter(this.NODEID,name,this.parms);
+            FileAdapter fileAdapter=new FileAdapter(this.NODEID,name,this.PARM);
             JSONObject re2 =fileAdapter.delete();
             if(re2.getInt("Errorcode") != 3000){
                 // 删除失败

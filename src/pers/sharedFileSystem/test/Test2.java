@@ -1,10 +1,7 @@
 package pers.sharedFileSystem.test;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.sf.json.JSONArray;
@@ -60,7 +57,7 @@ public class Test2 {
     private void saveFileToTest() throws Exception {
 		FileInputStream inputStream = new FileInputStream(new File(
 				"E:/图片视频/2.jpg"));
-		FileAdapter fileAdapter = new FileAdapter(inputStream);
+		FileAdapter fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("categoryId", "5");
         map.put("hallTypeId", "3");
@@ -79,7 +76,7 @@ public class Test2 {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
                     "E:/图片视频/2.jpg"));
-            fileAdapter = new FileAdapter(inputStream);
+            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
 //            map.put("activityId", ""+i);
             JSONObject re = fileAdapter.saveFileTo("eventActivityAlbum",
                     i+"-"+i+".jpg", map);
@@ -355,7 +352,12 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.getAllFilePathsTest();
+//        test2.getAllFilePathsTest();
+        Map map=new HashMap();
+        map.put("user","1");
+        map.put("USER","2");
+        System.out.println(map.get("user"));
+        System.out.println(map.get("USER"));
 //        System.out.println(re);
     }
 

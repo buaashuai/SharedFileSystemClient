@@ -115,7 +115,7 @@ public class CommonFileUtil {
      * @return absoluteOrRelative = true 返回绝对路径，false 返回相对路径
      */
     public static JSONObject initFilePath(String nodeId,
-                                          Map<String, String> parms, boolean absoluteOrRelative) {
+                                          Map<String, String> parms, boolean absoluteOrRelative,String operationInfo) {
         Node n = Config.getNodeByNodeId(nodeId);
         DirectoryNode node=(DirectoryNode)n;
         ServerNode serverNode = node.getServerNode();
@@ -140,7 +140,7 @@ public class CommonFileUtil {
                 }
             }
         }
-        generateFilePath(node, orignPath);
+        generateFilePath(node, orignPath,operationInfo);
         if (absoluteOrRelative)
             orignPath = node.StorePath + orignPath;
         Feedback feedback = new Feedback(3000, "");
@@ -155,14 +155,14 @@ public class CommonFileUtil {
      * @param path     文件在该节点下的相对路径
      * @return 反馈信息
      */
-    private static void generateFilePath(DirectoryNode rootNode, String path) {
+    private static void generateFilePath(DirectoryNode rootNode, String path, String operationInfo) {
         String[] paths = path.split("/");
         String root = rootNode.StorePath;
         for (int i = 0; i < paths.length; i++) {
             if (!CommonUtil.validateString(paths[i]))
                 continue;
             root += "/" + paths[i];
-            AdvancedFileUtil.validateDirectory(rootNode, root);
+            AdvancedFileUtil.validateDirectory(rootNode, root,operationInfo);
         }
     }
 

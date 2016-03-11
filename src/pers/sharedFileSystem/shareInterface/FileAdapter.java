@@ -67,8 +67,9 @@ public class FileAdapter extends Adapter {
 	 *
 	 * @param inputStream
 	 */
-	public FileAdapter(InputStream inputStream) {
+	public FileAdapter(InputStream inputStream,Map<String, String> parms) {
 		this.inputStream = inputStream;
+		this.PARM=parms;
 	}
 
 	public FileAdapter() {
@@ -94,10 +95,11 @@ public class FileAdapter extends Adapter {
 		DirectoryNode node = (DirectoryNode)n;
 		this.NODE = node;
 		this.NODEID = sourceNodeId;
+		this.PARM=parms;
 		this.fileName = fileName;
 		// 初始化节点的相对路径
 		JSONObject nodePathFeed = CommonFileUtil.initFilePath(sourceNodeId,
-				parms, false);
+				parms, false,this.getOperationInfo());
 		// 在指定的节点下生成文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
 		this.RELATIVE_FILEPATH="/";
@@ -148,8 +150,9 @@ public class FileAdapter extends Adapter {
 	 * 通过文件路径对文件适配器进行初始化
 	 *
 	 */
-	public FileAdapter(String filePath) {
+	public FileAdapter(String filePath,Map<String, String> parms) {
 		this.FILEPATH = filePath;
+		this.PARM=parms;
 	}
 
 	/**
@@ -233,7 +236,7 @@ public class FileAdapter extends Adapter {
 					re.setErrorcode(3026);
 				return re.toJsonObject();
 			}else {//如果删除的结点不是去冗结点，直接删除物理文件
-				if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
+				if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH,this.getOperationInfo()))
 					feedback = new Feedback(3000, "");
 				else
 					feedback = new Feedback(3001, "");
@@ -293,6 +296,7 @@ public class FileAdapter extends Adapter {
 			}
 			g2d.dispose();
 			ImageIO.write(image, "png", outFile);// 输出png图片
+			LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"make png file at " + this.NODE.getServerNode().Ip + ": " + this.FILEPATH);
 			feedback = new Feedback(3000, "");
 			feedback.addFeedbackInfo(this.FILEPATH.substring(this.NODE.StorePath.length()));// fileName已经带有后缀名
 			return feedback.toJsonObject();// (baseFilePath.length()).replaceAll("\\\\",
@@ -468,7 +472,7 @@ public class FileAdapter extends Adapter {
 		ServerNode serverNode = node.getServerNode();// 保存文件的目的节点所属的根节点
 		// 初始化节点的相对路径
 		JSONObject nodePathFeed = CommonFileUtil.initFilePath(desNodeId,
-				parms, false);
+				parms, false,this.getOperationInfo());
 		if (nodePathFeed.getInt("Errorcode") != 3000) {
 			return nodePathFeed;
 		}
@@ -614,14 +618,14 @@ public class FileAdapter extends Adapter {
 				if(jsonArray.size()>0) {
 					feedback.addFeedbackInfo(jsonArray.getString(0) + "/"
 							+ fileName);// fileName已经带有后缀名
-					LogRecord.FileHandleInfoLogger.info("save file successful: "
+					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
 							+ jsonArray.getString(0) + "/" + fileName);
 				}
 				else {
 					feedback.addFeedbackInfo("/"
 							+ fileName);// fileName已经带有后缀名
-					LogRecord.FileHandleInfoLogger.info("save file successful: "
+					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
 							+ "/" + fileName);
 				}

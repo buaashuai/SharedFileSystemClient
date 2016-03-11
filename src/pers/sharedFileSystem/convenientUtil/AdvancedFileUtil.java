@@ -89,15 +89,17 @@ public class AdvancedFileUtil {
 	 *            文件夹所在目录节点对象
 	 * @param route
 	 *            文件绝对路径
+	 *  @param operationInfo
+	 *            操作者信息
 	 */
-	public static void validateDirectory(DirectoryNode directoryNode, String route) {
+	public static void validateDirectory(DirectoryNode directoryNode, String route, String operationInfo) {
 		ServerNode serverNode=directoryNode.getServerNode();
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
 			File file = new File(route);
 			// 如果文件夹不存在则创建
 			if (!file.exists() && !file.isDirectory()) {
 				file.mkdir();
-				LogRecord.FileHandleInfoLogger.info("make directiry at "+serverNode.Ip+": "+route);
+				LogRecord.FileHandleInfoLogger.info(operationInfo+"make directiry at "+serverNode.Ip+": "+route);
 			}
 		} else {
 			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
@@ -107,7 +109,7 @@ public class AdvancedFileUtil {
 				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 				if(!flag) {
 					ftpClient.makeDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
-					LogRecord.FileHandleInfoLogger.info("make directiry at " + serverNode.Ip + ": " + route);
+					LogRecord.FileHandleInfoLogger.info(operationInfo+"make directiry at " + serverNode.Ip + ": " + route);
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -125,12 +127,12 @@ public class AdvancedFileUtil {
 	 *            被删除文件的文件名
 	 * @return 单个文件删除成功返回true，否则返回false
 	 */
-	private static boolean deleteLocalFile(String filePath) {
+	private static boolean deleteLocalFile(String filePath, String operationInfo) {
 		File file = new File(filePath);
 		// 路径为文件且不为空则进行删除
 		if (file.isFile() && file.exists()) {
 			file.delete();
-			LogRecord.FileHandleInfoLogger.info("delete file successful: " + "127.0.0.1/"
+			LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + "127.0.0.1/"
 					+filePath);
 		}else
 			LogRecord.FileHandleErrorLogger.error("file not exist: " + "127.0.0.1/"
@@ -145,7 +147,7 @@ public class AdvancedFileUtil {
 	 *            被删除目录的文件路径
 	 * @return 目录删除成功返回true，否则返回false
 	 */
-	private static boolean deleteLocalDirectory(String filePath) {
+	private static boolean deleteLocalDirectory(String filePath, String operationInfo) {
 		// 如果sPath不以文件分隔符结尾，自动添加文件分隔符
 //		if (!filePath.endsWith(File.separator)) {
 //			filePath = filePath + File.separator;
@@ -163,10 +165,10 @@ public class AdvancedFileUtil {
 		for (int i = 0; i < files.length; i++) {
 			// 删除子文件
 			if (files[i].isFile()) {
-				flag = deleteLocalFile(files[i].getAbsolutePath());
+				flag = deleteLocalFile(files[i].getAbsolutePath(),operationInfo);
 			}
 			else { // 删除子目录
-				flag = deleteLocalDirectory(files[i].getAbsolutePath());
+				flag = deleteLocalDirectory(files[i].getAbsolutePath(),operationInfo);
 			}
 			if (!flag) {
 				LogRecord.FileHandleErrorLogger.error("delete file fail: " + "127.0.0.1/"
@@ -176,7 +178,7 @@ public class AdvancedFileUtil {
 		}
 		// 删除当前目录
 		if (dirFile.delete()) {
-			LogRecord.FileHandleInfoLogger.info("delete directory successful: " + "127.0.0.1/"
+			LogRecord.FileHandleInfoLogger.info(operationInfo+"delete directory successful: " + "127.0.0.1/"
 					+filePath);
 			return true;
 		} else {
@@ -195,7 +197,7 @@ public class AdvancedFileUtil {
 	 *            要删除的目录或者文件的绝对路径
 	 * @return 删除成功返回 true，删除失败返回 false。
 	 */
-	public static boolean delete(DirectoryNode node, String filePath) {
+	public static boolean delete(DirectoryNode node, String filePath,String operationInfo) {
 		ServerNode serverNode = node.getServerNode();
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {//如果是本地文件或者目录
 			File file = new File(filePath);
@@ -207,9 +209,9 @@ public class AdvancedFileUtil {
 			} else {
 				// 判断是否为文件
 				if (file.isFile()) { // 为文件时调用删除文件方法&&!file.getName().equals("Fingerprint.sys")
-					return deleteLocalFile(filePath);
+					return deleteLocalFile(filePath,operationInfo);
 				} else { // 为目录时调用删除目录方法
-					return deleteLocalDirectory(filePath);
+					return deleteLocalDirectory(filePath,operationInfo);
 				}
 			}
 		} else {// 远程文件
@@ -222,7 +224,7 @@ public class AdvancedFileUtil {
 				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 				if(flag){//刪除的是文件夹
 					ftpClient.changeToParentDirectory();
-					re=deleteRemoteDirectory(node,ftpClient,relativePath);//为了删除中文文件，必须加编码
+					re=deleteRemoteDirectory(node,ftpClient,relativePath,operationInfo);//为了删除中文文件，必须加编码
 					if(re==false) {
 						LogRecord.FileHandleErrorLogger.error("directory path illegal: "+serverNode.Ip + "/"
 								+ filePath);
@@ -234,7 +236,7 @@ public class AdvancedFileUtil {
 						LogRecord.FileHandleErrorLogger.error("file path illegal: "+serverNode.Ip + "/"
 								+ filePath);
 					else
-						LogRecord.FileHandleInfoLogger.info("delete file successful: " + serverNode.Ip + "/"
+						LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + serverNode.Ip + "/"
 								+ filePath);
 				}
 			} catch (Exception e) {
@@ -251,7 +253,7 @@ public class AdvancedFileUtil {
 	 * @param relativePath 目录或者文件
 	 * @return 删除是否成功
 	 */
-	private static  boolean deleteRemoteDirectory(DirectoryNode directoryNode, FTPClient ftpClient, String relativePath) {
+	private static  boolean deleteRemoteDirectory(DirectoryNode directoryNode, FTPClient ftpClient, String relativePath,String operationInfo) {
 		String sourceFilePath=relativePath;
 		try {
 //			relativePath=new String(relativePath.getBytes(),"ISO-8859-1");
@@ -259,12 +261,12 @@ public class AdvancedFileUtil {
 			for (FTPFile file : files) {
 				String fileName=file.getName();//new String(file.getName().getBytes("ISO-8859-1"),"gb2312")
 				if (file.isDirectory()) {
-					deleteRemoteDirectory(directoryNode,ftpClient,sourceFilePath+ "/" +fileName);
+					deleteRemoteDirectory(directoryNode,ftpClient,sourceFilePath+ "/" +fileName,operationInfo);
 				}
 				if (file.isFile()) {
 					if(ftpClient.deleteFile(relativePath + "/" + file.getName())) {
 //						fileName=new String(fileName.getBytes("gb2312"), "utf-8");
-						LogRecord.FileHandleInfoLogger.info("delete file successful: " + directoryNode.getServerNode().Ip + "/"
+						LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + directoryNode.getServerNode().Ip + "/"
 								+ directoryNode.Path + sourceFilePath + "/" + fileName);
 					}
 					else {
@@ -278,7 +280,7 @@ public class AdvancedFileUtil {
 			if(re==false) {
 				return false;
 			}else
-				LogRecord.FileHandleInfoLogger.info("delete directory successful: " + directoryNode.getServerNode().Ip + "/"
+				LogRecord.FileHandleInfoLogger.info(operationInfo+"delete directory successful: " + directoryNode.getServerNode().Ip + "/"
 						+ directoryNode.Path+sourceFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();
