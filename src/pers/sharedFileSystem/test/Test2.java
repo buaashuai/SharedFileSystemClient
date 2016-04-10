@@ -349,15 +349,123 @@ public class Test2 {
         String str2="1234";
         System.out.println(str1.compareTo(str2));
     }
+
+    private void sizeOfObjectTest() throws IllegalAccessException {
+        FingerprintInfo fingerprintInfo=new FingerprintInfo("13456","temp","e:/df/","a.txt", FileType.ANY);
+        System.out.println("sizeOf(new FingerprintInfo())=" + SizeOfObject.fullSizeOf(fingerprintInfo));
+    }
+
+    /**
+     * 生成指定大小文件
+     * @param num 文件个数
+     * @param size 文件大小，KB
+     * @param path 文件保存路径
+     */
+    private void generateFileTest(int num, int size, String path){
+        byte[] buf = new byte[1024];//1KB
+
+        for (int k=1;k<=num;k++) {
+            try {
+                String str=""+k;
+                buf=str.getBytes();
+                String fullPath = path + "/m"+k+".txt";
+                FileOutputStream fos = new FileOutputStream(fullPath);
+                for (long i = 0; i < size; i++) {
+                    fos.write(buf, 0, buf.length);
+                }
+                fos.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 系统写性能测试
+     */
+    private void writePerformanceTest() throws FileNotFoundException {
+        String path="E:/test/5MB_100MB";
+        FileInputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("hallTypeId", "1992");
+        map.put("fileSuffix", "txt");
+        for(int i=5;i<=100;i+=5) {
+            long starTime=System.currentTimeMillis();
+
+            String name="m"+i+".txt";
+            inputStream =  new FileInputStream(new File(
+                    path+"/"+name));
+            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
+            JSONObject re = fileAdapter.saveFileTo("renderConfig",
+                    name, map);
+
+            long endTime=System.currentTimeMillis();
+            long time=endTime-starTime;
+            double timeSpan=(double)time/1000;
+            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
+        }
+    }
+
+    /**
+     * 系统读性能测试
+     */
+    private void readPerformanceTest() throws IOException {
+        String path="E:/test/5MB_100MB";
+        InputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("hallTypeId", "1992");
+        map.put("fileSuffix", "txt");
+        byte[] buf = new byte[1024];//1KB
+        for(int i=5;i<=100;i+=5) {
+            long starTime=System.currentTimeMillis();
+            buf = new byte[1024];
+            String name="m"+i+".txt";
+            fileAdapter = new FileAdapter("renderConfig",
+                    name, map);
+//            inputStream=fileAdapter.getFileInputStream();
+//            inputStream.read(buf);
+//            inputStream.close();
+            long endTime=System.currentTimeMillis();
+            long time=endTime-starTime;
+            double timeSpan=(double)time/1000;
+            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
+        }
+    }
+
+    /**
+     * 内存利用率测试
+     */
+    private void memoryPerformanceTest(int start, int end) throws FileNotFoundException {
+        String path="E:/test/1KB_10000";
+        FileInputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("hallTypeId", "1992");
+        map.put("fileSuffix", "txt");
+        for(int i=start;i<=end;i++) {
+            long starTime=System.currentTimeMillis();
+
+            String name="m"+i+".txt";
+            inputStream =  new FileInputStream(new File(
+                    path+"/"+name));
+            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
+            JSONObject re = fileAdapter.saveFileTo("renderConfig",
+                    name, map);
+
+            long endTime=System.currentTimeMillis();
+            long time=endTime-starTime;
+            double timeSpan=(double)time/1000;
+//            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
+        }
+    }
+
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-//        test2.getAllFilePathsTest();
-        Map map=new HashMap();
-        map.put("user","1");
-        map.put("USER","2");
-        System.out.println(map.get("user"));
-        System.out.println(map.get("USER"));
+        test2.memoryPerformanceTest(1, 2000);
+//       test2.generateFileTest(10000,1, "E:/test/1KB_10000");
 //        System.out.println(re);
     }
 
