@@ -1,5 +1,6 @@
 package pers.sharedFileSystem.convenientUtil;
 
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Map;
 
@@ -82,14 +83,30 @@ public class CommonFileUtil {
     }
 
     /**
+     * 获取文件类型
+     *
+     * @param fileSuffix 文件后缀名
+     * @return 文件类型
+     */
+    public static FileType getFileType(String fileSuffix) {
+        FileType[] fileTypes = FileType.values();
+        fileSuffix=fileSuffix.toUpperCase();
+        for (FileType type : fileTypes) {
+            if (type.toString().equals(fileSuffix)) {
+                return type;
+            }
+        }
+        return FileType.UNCERTAIN;
+    }
+
+    /**
      * 判断保存的文件是否符合节点白名单的规定
      *
-     * @param bs   文件的部分输入流
      * @param node 待保存的节点
      * @param fileSuffix 文件后缀名
      * @return 是否符合规定
      */
-    public static boolean isLegalFile(byte[] bs, Node node, FileType fileType,String fileSuffix) {
+    public static boolean isLegalFile(Node node, FileType fileType,String fileSuffix) {
         if (node instanceof DirectoryNode) {
             DirectoryNode dNode = (DirectoryNode) node;
             if (fileType == FileType.UNCERTAIN) {// 对于无法自动识别的文件类型，单独做处理
@@ -102,6 +119,25 @@ public class CommonFileUtil {
             if (dNode.WhiteList.contains(FileType.ANY) || fileType != FileType.UNCERTAIN
                     && dNode.WhiteList.contains(fileType))
                 return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断保存的文件是否符合节点白名单的规定
+     *
+     * @param node 待保存的节点
+     * @param fileSuffix 文件后缀名
+     * @return 是否符合规定
+     */
+    public static boolean isLegalFile(Node node, String fileSuffix) {
+        if (node instanceof DirectoryNode) {
+            DirectoryNode dNode = (DirectoryNode) node;
+            for (FileType f : dNode.WhiteList) {
+                if (f.toString().equals(fileSuffix.toUpperCase())) {
+                    return true;
+                }
+            }
         }
         return false;
     }

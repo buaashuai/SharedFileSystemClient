@@ -497,35 +497,37 @@ public class FileAdapter extends Adapter {
 			}
 			ByteArrayOutputStream baos = inputStreamToByte(inputStream);
 
-			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
+//			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
 
-			byte[] bs = new byte[1024];// 1Kb
-			int len = 0;
-			len = stream1.read(bs);
+//			byte[] bs = new byte[1024];// 1Kb
+//			int len = 0;
+//			len = stream1.read(bs);
 			// 第一次读取输入流，用来判断文件类型， 以及该文件类型是否符合节点的白名单规定
-			FileType fileType = CommonFileUtil.getFileType(bs);// 目前没法识别XML、TXT这些文本文件，只能通过后缀名识别，因为他们的文件头不固定
+			String fileSuffix = fileName.substring(fileName
+					.lastIndexOf('.') + 1);// 用户上传的文件后缀
+			FileType fileType = CommonFileUtil.getFileType(fileSuffix);
 			// 文本文件无法用文件头进行识别，因此默认为用户上传的文件后缀
-			String fileSuffix=parms.get("fileSuffix");
+//			String fileSuffix=parms.get("fileSuffix");
 
-			if (!CommonFileUtil.isLegalFile(bs, node, fileType,fileSuffix)) {
+			if (!CommonFileUtil.isLegalFile(node, fileType,fileSuffix)) {
 				feedback = new Feedback(3006, "文件类型：" + fileType);
 				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
 				return feedback.toJsonObject();
 			}
 
 			// 判断fileName是否有后缀名
-			if (!fileName.contains(".")) {
-				if (fileType == FileType.UNCERTAIN) {
-					if(CommonUtil.validateString(fileSuffix))
-						fileName += "." + fileSuffix;
-					else{
-						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
-						feedback = new Feedback(3016, "");
-						return feedback.toJsonObject();
-					}
-				}else
-					fileName += "." + fileType.toString();
-			}
+//			if (!fileName.contains(".")) {
+//				if (fileType == FileType.UNCERTAIN) {
+//					if(CommonUtil.validateString(fileSuffix))
+//						fileName += "." + fileSuffix;
+//					else{
+//						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
+//						feedback = new Feedback(3016, "");
+//						return feedback.toJsonObject();
+//					}
+//				}else
+//					fileName += "." + fileType.toString();
+//			}
 
 			if (node.Redundancy.Switch) {//如果上传的节点需要进行文件删冗
 				// 布隆过滤器置位
