@@ -370,7 +370,7 @@ public class Test2 {
                 buf=str.getBytes();
                 String fullPath = path + "/m"+k+".txt";
                 FileOutputStream fos = new FileOutputStream(fullPath);
-                for (long i = 0; i < size; i++) {
+                for (long i = 0; i < size*1024; i++) {
                     fos.write(buf, 0, buf.length);
                 }
                 fos.close();
@@ -405,6 +405,54 @@ public class Test2 {
             double timeSpan=(double)time/1000;
             System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
         }
+    }
+
+    /**
+     * HDFS写性能测试
+     * @param dirName 测试用例所在文件夹名称，例如：1KB, 1MB
+     */
+    private void hdfsWritePerformanceTest(String dirName) throws Exception {
+        try
+        {
+            Thread.sleep(10000);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        OperaHDFS.uploadFile("E:\\test\\1KB_2GB\\tmp.txt", "/hadoop/myfile/test/tmp.txt");
+        long starTime=System.currentTimeMillis();
+        for(int i=1;i<=3;i++) {
+            String fileName="m"+i+".txt";
+            OperaHDFS.uploadFile("E:\\test\\1KB_2GB\\" + dirName+"\\"+fileName, "/hadoop/myfile/test/"+fileName+"_"+dirName);
+        }
+        long endTime=System.currentTimeMillis();
+        long time=endTime-starTime;
+        double timeSpan=(double)time/1000;
+        System.out.println("time [ "+dirName+" ]: "+timeSpan+" 秒");
+    }
+
+    private void deleteHdfsFile() throws Exception {
+//        for(int i=1;i<=3;i++) {
+//            String fileName="m"+i+".txt";
+//            OperaHDFS.deleteFileOnHDFS("/hadoop/myfile/test/" + fileName);
+//        }
+
+        long starTime=System.currentTimeMillis();
+        try
+        {
+            Thread.sleep(5000);
+        }
+        catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+        long endTime=System.currentTimeMillis();
+        long time=endTime-starTime;
+        double timeSpan=(double)time/1000;
+        System.out.println("time [ "+" ]: "+timeSpan+" 秒");
+        System.out.println("hello");
     }
 
     /**
@@ -464,8 +512,10 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.memoryPerformanceTest(1, 2000);
-//       test2.generateFileTest(10000,1, "E:/test/1KB_10000");
+//        test2.memoryPerformanceTest(1, 2000);
+//       test2.generateFileTest(3,1024*128, "E:/test/1KB_2GB/128MB");
+        test2.hdfsWritePerformanceTest("128"+"MB");
+//        test2.deleteHdfsFile();
 //        System.out.println(re);
     }
 

@@ -27,7 +27,7 @@ public class Config {
 	 * false 表示部署阶段
 	 * </p>
 	 */
-	public static final RuntimeType runtimeType = RuntimeType.CLIENT;
+	public static final RuntimeType runtimeType = RuntimeType.DEBUG;
 	/**
 	 * 资源目录名的前导符
 	 * <p>
