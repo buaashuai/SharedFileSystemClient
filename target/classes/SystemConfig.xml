@@ -2,4 +2,7 @@
 <SystemConfig>
 	<ip>127.0.0.1</ip><!--冗余验证服务器ip-->
 	<port>9998</port><!--冗余验证服务器的监听端口-->
+	<weightCPU>0.3</weightCPU>
+	<weightMemory>0.3</weightMemory>
+	<weightDisk>0.3</weightDisk>
 </SystemConfig>

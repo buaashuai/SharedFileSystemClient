@@ -19,7 +19,7 @@
 <configuration>
 	<property>
 		<name>fs.default.name</name>
-		<value>hdfs://10.2.8.178:9001</value>
+		<value>hdfs://10.2.8.181:9001</value>
 	</property>
 	
 	<property>

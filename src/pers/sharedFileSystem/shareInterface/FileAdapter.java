@@ -403,12 +403,12 @@ public class FileAdapter extends Adapter {
 			if (!CommonUtil.isRemoteServer(ip)) {// 保存到本地
 				File newFile = new File(fullPath);
 				newFile.createNewFile();
-				byte[] bs = new byte[1024];// 1Kb
+				byte[] bs = new byte[1024*1024*10];// 10Mb
 				int len = stream2.read(bs);
 				outputStream = new FileOutputStream(newFile);
 				while (len > 0) {
 					outputStream.write(bs);
-					bs = new byte[1024];// 1Kb
+					bs = new byte[1024*1024*10];// 10Mb
 					len = stream2.read(bs);
 				}
 			} else {// 保存到远程服务器
@@ -495,7 +495,8 @@ public class FileAdapter extends Adapter {
 				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
 				return feedback.toJsonObject();
 			}
-			ByteArrayOutputStream baos = inputStreamToByte(inputStream);
+			//超过1G的文件会出现内存不足
+			ByteArrayOutputStream baos =null;
 
 //			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
 
@@ -540,6 +541,7 @@ public class FileAdapter extends Adapter {
 					}
 				}
 				else if(node.Redundancy.FingerGenType== FingerGenerateType.SERVER){
+					baos= inputStreamToByte(inputStream);
 					InputStream stream3 = new ByteArrayInputStream(baos.toByteArray());
 					SHA1_MD5 sha1_md5=new SHA1_MD5();
 					fingerPrint = sha1_md5.digestFile(stream3,SHA1_MD5.MD5);
@@ -596,8 +598,9 @@ public class FileAdapter extends Adapter {
 						+ "]");
 				return feedback.toJsonObject();
 			}
-
-			InputStream stream2 = new ByteArrayInputStream(baos.toByteArray());
+			InputStream stream2 =inputStream;
+			if (node.Redundancy.Switch&&node.Redundancy.FingerGenType== FingerGenerateType.SERVER)
+				stream2 = new ByteArrayInputStream(baos.toByteArray());
 
 			// 将文件流写入磁盘
 			boolean result = saveFile(stream2, node, destFilePath,

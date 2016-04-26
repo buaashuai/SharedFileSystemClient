@@ -4,11 +4,14 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * 操作 HDFS 的工具类
@@ -17,7 +20,20 @@ public class OperaHDFS {
     /**
      * 加载配置文件
      */
-    static Configuration conf = new Configuration();
+    public static Configuration conf = new Configuration();
+    public static FileSystem fileSystem;
+    static{
+        try {
+            long starTime=System.currentTimeMillis();
+            fileSystem= FileSystem.get(conf);
+            long endTime=System.currentTimeMillis();
+            long time=endTime-starTime;
+            double timeSpan=(double)time/1000;
+            System.out.println("fileSystem 初始化成功 [ "+" ]: "+timeSpan+" 秒");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     /**
      * 重名名一个文件夹或者文件
@@ -75,6 +91,17 @@ public class OperaHDFS {
         hdfs.close();
     }
 
+    private static FileSystem createFileSystem() throws URISyntaxException, IOException {
+        URI uri=new URI("hdfs://10.2.8.181:9001");
+        Class clazz = conf.getClass("fs." + uri.getScheme() + ".impl", (Class)null);
+        if(clazz == null) {
+            throw new IOException("No FileSystem for scheme: " + uri.getScheme());
+        } else {
+            FileSystem fs = (FileSystem) ReflectionUtils.newInstance(clazz, conf);
+            fs.initialize(uri, conf);
+            return fs;
+        }
+    }
     /**
      * 从HDFS上下载文件或文件夹到本地
      * @param sourceFilePath 文件在HDFS的相对路径（带文件名和后缀名）
@@ -96,6 +123,7 @@ public class OperaHDFS {
      * @throws Exception
      */
     public static void createDirectoryOnHDFS(String relativeDirPath)throws Exception{
+//        FileSystem.closeAll();//删除HDFS缓存，因为IP地址改变了namenode必须删除缓存
         FileSystem fs=FileSystem.get(conf);
         Path p =new Path(relativeDirPath);
         fs.mkdirs(p);
@@ -151,19 +179,20 @@ public class OperaHDFS {
      */
     public static void uploadFile(String sourcePath, String destPath)throws Exception{
         //加载默认配置
-        FileSystem fs=FileSystem.get(conf);
+//        FileSystem.closeAll();
+//        FileSystem fs=createFileSystem();
         //本地文件
         Path src =new Path(sourcePath);
         //HDFS为止
         Path dst =new Path(destPath);
         try {
-            fs.copyFromLocalFile(src, dst);
+            fileSystem.copyFromLocalFile(src, dst);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
         System.out.println("上传文件成功["+destPath+"]");
-        fs.close();//释放资源
+//        fileSystem.close();//释放资源
     }
 
     public static void main(String[] args) throws Exception {
@@ -180,7 +209,7 @@ public class OperaHDFS {
         /**
          *     示例：  "E:\图片视频\1.flv"     "/hadoop/myfile/1.flv"
          */
-//        uploadFile("E:\\图片视频\\大话设计模式.rar", "/hadoop/myfile/test2/sheji1.rar");
+        uploadFile("E:\\图片视频\\1.jpg", "/hadoop/myfile/test/1.jpg");
 
         /**
          *     示例：  "/hadoop/myfile/1.flv"
