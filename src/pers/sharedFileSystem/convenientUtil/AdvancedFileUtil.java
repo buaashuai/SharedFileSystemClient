@@ -3,15 +3,13 @@ package pers.sharedFileSystem.convenientUtil;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
-import pers.sharedFileSystem.entity.DirectoryNode;
-import pers.sharedFileSystem.entity.Feedback;
-import pers.sharedFileSystem.entity.Node;
-import pers.sharedFileSystem.entity.ServerNode;
+import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
 import pers.sharedFileSystem.networkManager.FileSystemClient;
@@ -50,18 +48,20 @@ public class AdvancedFileUtil {
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
 			result= new File(fullPath).exists();
 		} else {
-			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
-					type);
-			// ftpClient.setControlEncoding(encoding); // 中文支持
-			try {
-				ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
-				FTPFile[] ftpFiles = ftpClient.listFiles(fileName);//new String(fileName.getBytes(),"ISO-8859-1")
-				if (ftpFiles.length > 0)
-					result = true;
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				LogRecord.FileHandleErrorLogger.error(e.toString());
+			synchronized (new Date()) {
+				FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
+						type);
+				// ftpClient.setControlEncoding(encoding); // 中文支持
+				try {
+					ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
+					FTPFile[] ftpFiles = ftpClient.listFiles(fileName);//new String(fileName.getBytes(),"ISO-8859-1")
+					if (ftpFiles.length > 0)
+						result = true;
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					LogRecord.FileHandleErrorLogger.error(e.toString());
+				}
 			}
 		}
 		if(node.Redundancy.Switch&&result){

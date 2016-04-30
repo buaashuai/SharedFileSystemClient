@@ -403,27 +403,32 @@ public class FileAdapter extends Adapter {
 			if (!CommonUtil.isRemoteServer(ip)) {// 保存到本地
 				File newFile = new File(fullPath);
 				newFile.createNewFile();
-				byte[] bs = new byte[1024*1024*10];// 10Mb
+				byte[] bs = new byte[1024*1024];// 1Mb
 				int len = stream2.read(bs);
 				outputStream = new FileOutputStream(newFile);
 				while (len > 0) {
 					outputStream.write(bs);
-					bs = new byte[1024*1024*10];// 10Mb
+					bs = new byte[1024*1024];// 1Mb
 					len = stream2.read(bs);
 				}
 			} else {// 保存到远程服务器
 				FTPClient ftpClient = null;
-				if (this.NODE!=null&&destRootNode.getServerNode().Ip.equals(this.NODE.getServerNode().Ip))
+				synchronized (this) {
 					ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
 							true);
-				else {
-					ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
-							false);
+//					if (this.NODE!=null&&destRootNode.getServerNode().Ip.equals(this.NODE.getServerNode().Ip))
+//						ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
+//								true);
+//					else {
+//						ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
+//								false);//false
+//					}
+					String relativePath = destFilePath.substring(destRootNode.StorePath
+							.length());
+						ftpClient.changeWorkingDirectory(relativePath);
+						ftpClient.storeFile(fileName, stream2);
+//					ftpClient.disconnect();//断开连接
 				}
-				String relativePath = destFilePath.substring(destRootNode.StorePath
-						.length());
-				ftpClient.changeWorkingDirectory(relativePath);
-				ftpClient.storeFile(fileName, stream2);
 			}
 			return true;
 		} catch (Exception e) {
@@ -590,14 +595,14 @@ public class FileAdapter extends Adapter {
 			if (this.NODE != null
 					&& serverNode.Ip.equals(this.NODE.getServerNode().Ip))
 				type = true;
-			if (AdvancedFileUtil.isFileExist(node, destFilePath,
-					fileName, type)) {
-				feedback = new Feedback(3002, "");
-				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo()
-						+ " [" + serverNode.Ip + "/" + destFilePath + fileName
-						+ "]");
-				return feedback.toJsonObject();
-			}
+//			if (AdvancedFileUtil.isFileExist(node, destFilePath,
+//					fileName, type)) {
+//				feedback = new Feedback(3002, "");
+//				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo()
+//						+ " [" + serverNode.Ip + "/" + destFilePath + fileName
+//						+ "]");
+//				return feedback.toJsonObject();
+//			}
 			InputStream stream2 =inputStream;
 			if (node.Redundancy.Switch&&node.Redundancy.FingerGenType== FingerGenerateType.SERVER)
 				stream2 = new ByteArrayInputStream(baos.toByteArray());

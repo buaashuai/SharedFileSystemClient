@@ -365,7 +365,7 @@ public class Test2 {
     private void generateFileTest(int num, int size, String path){
         byte[] buf = new byte[1024];//1KB
 
-        for (int k=1;k<=num;k++) {
+        for (int k=10;k<=num;k++) {
             try {
                 String str=""+k;
                 buf=str.getBytes();
@@ -435,38 +435,12 @@ public class Test2 {
         }
     }
 
-    /**
-     * 测试我的文件系统
-     */
-    public void testRRMFS(){
-//        String path="E:/test/5MB_100MB";
-//        FileInputStream inputStream =null;
-//        FileAdapter fileAdapter = null;
-//        HashMap<String, String> map = new HashMap<String, String>();
-//        map.put("hallTypeId", "1992");
-//        map.put("fileSuffix", "txt");
-//        for(int i=5;i<=100;i+=5) {
-//            long starTime=System.currentTimeMillis();
-//
-//            String name="m"+i+".txt";
-//            inputStream =  new FileInputStream(new File(
-//                    path+"/"+name));
-//            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
-//            JSONObject re = fileAdapter.saveFileTo("renderConfig",
-//                    name, map);
-//
-//            long endTime=System.currentTimeMillis();
-//            long time=endTime-starTime;
-//            double timeSpan=(double)time/1000;
-//            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
-//        }
-    }
 
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
 //        test2.memoryPerformanceTest(1, 2000);
-//       test2.generateFileTest(3,1024*256, "E:/test/1KB_2GB/256MB");
+       test2.generateFileTest(110,1024*1, "E:/test/1KB_2GB/1MB");
 //        test2.hdfsWritePerformanceTest("256"+"MB");
 //        test2.deleteHdfsFile();
 //        System.out.println(re);
