@@ -438,6 +438,27 @@ public class RRMFSTest {
                 + preName;// new Random(System.currentTimeMillis()).nextInt();
         return name;
     }
+
+    /**
+     * 生成更多的测试样本
+     * @throws Exception
+     */
+    public void generateMoreTestFile() throws Exception {
+        String path="E:/test/1KB_2GB/2MB/";
+        FileInputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        for(int i=1;i<=100;i++) {
+            String fileName="m"+i+".txt";
+            inputStream =  new FileInputStream(new File(
+                    path+fileName));
+            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
+            String newName="m"+(i+400)+".txt";
+            JSONObject re = fileAdapter.saveFileTo("tempStoreNode2",
+                    newName, map);
+        }
+    }
+
     /**
      * 并发性能测试
      */
@@ -447,10 +468,13 @@ public class RRMFSTest {
             System.out.println("[RRMFS并发测试] 请输入并发个数：");
             String testDir=strin.readLine();
             while(!testDir.equals("#")) {
-                throughputRRMFS(Integer.parseInt(testDir));
+                throughputRRMFS2(Integer.parseInt(testDir));
                 System.out.println("\n[RRMFS并发测试] 请输入并发个数：");
                 testDir=strin.readLine();
             }
+//            for(int i=1;i<=30;i++){
+//                throughputRRMFS(i);
+//            }
         } catch (IOException e) {
             e.printStackTrace();
         } catch (Exception e) {
@@ -579,10 +603,10 @@ public class RRMFSTest {
 //                        fileAdapter.saveFileTo("renderConfig",
 //                                newName, new HashMap<String, String>());
                         if(x%2==0) {
-                            fileAdapter.saveFileTo("temp",
+                            fileAdapter.saveFileTo("filePath",
                                     newName, new HashMap<String, String>());
                         }else{
-                            fileAdapter.saveFileTo("filePath",
+                            fileAdapter.saveFileTo("renderConfig",
                                     newName, new HashMap<String, String>());
                         }
                         addTotalTime(1);
@@ -633,10 +657,10 @@ public class RRMFSTest {
                         FileAdapter fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());//renderConfig
 //                        fileAdapter.saveFileTo("renderConfig",
 //                                newName, new HashMap<String, String>());
-                        if(x%3==1) {
+                        if(x%3==2) {
                             fileAdapter.saveFileTo("temp",
                                     newName, new HashMap<String, String>());
-                        }else if(x%3 == 2){
+                        }else if(x%3 == 1){
                             fileAdapter.saveFileTo("filePath",
                                     newName, new HashMap<String, String>());
                         }else{
@@ -665,5 +689,6 @@ public class RRMFSTest {
 //        testRRMFS.readMD5();
 //        testRRMFS.writeRRMFS();
         testRRMFS.concurrentRRMFS();
+//        testRRMFS.generateMoreTestFile();
     }
 }
