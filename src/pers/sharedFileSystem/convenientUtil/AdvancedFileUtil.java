@@ -2,15 +2,17 @@ package pers.sharedFileSystem.convenientUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
-import pers.sharedFileSystem.entity.DirectoryNode;
-import pers.sharedFileSystem.entity.Node;
-import pers.sharedFileSystem.entity.ServerNode;
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
+import pers.sharedFileSystem.networkManager.FileSystemClient;
 
 /**
  * 文件操作相关的工具包
@@ -22,7 +24,7 @@ public class AdvancedFileUtil {
 	/**
 	 * 判断文件是否存在
 	 * 
-	 * @param serverNode
+	 * @param node
 	 *            待验证的文件所在的根节点对象
 	 * @param filePath
 	 *            文件绝对路径，不带文件名
@@ -38,29 +40,46 @@ public class AdvancedFileUtil {
 			String fileName, boolean type) {
 		ServerNode serverNode=node.getServerNode();
 		String fullPath = filePath + fileName;
+		boolean result=false;
 		if (filePath.charAt(filePath.length() - 1) != '/')
 			fullPath = filePath + "/" + fileName;
+		String relativePath= filePath.substring(node.StorePath
+				.length());
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
-			return new File(fullPath).exists();
+			result= new File(fullPath).exists();
 		} else {
-			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
-					type);
-			// ftpClient.setControlEncoding(encoding); // 中文支持
-			boolean re = false;
-			try {
-				String relativePath = filePath.substring(node.StorePath
-						.length());
-				ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
-				FTPFile[] ftpFiles = ftpClient.listFiles(new String(fileName.getBytes(),"ISO-8859-1"));
-				if (ftpFiles.length > 0)
-					re = true;
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				LogRecord.FileHandleErrorLogger.error(e.toString());
+			synchronized (new Date()) {
+				FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
+						type);
+				// ftpClient.setControlEncoding(encoding); // 中文支持
+				try {
+					ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
+					FTPFile[] ftpFiles = ftpClient.listFiles(fileName);//new String(fileName.getBytes(),"ISO-8859-1")
+					if (ftpFiles.length > 0)
+						result = true;
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					LogRecord.FileHandleErrorLogger.error(e.toString());
+				}
 			}
-			return re;
 		}
+		if(node.Redundancy.Switch&&result){
+			ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();
+			FingerprintInfo fInfo=new FingerprintInfo();
+			fInfo.setFilePath(relativePath);
+			fInfo.setNodeId(node.Id);
+			fInfo.setFileName(fileName);
+			files.add(fInfo);
+			Feedback feedback2= FileSystemClient.sendValidateFileNames(serverNode.Id, files);
+			if(feedback2.getErrorcode()==3000) {//
+				ArrayList<FingerprintInfo> validateFiles = (ArrayList<FingerprintInfo>) feedback2.getFeedbackInfo("validateFiles");
+				files=validateFiles;
+			}
+			if(files.size()<1)
+				result=false;
+		}
+		return result;
 	}
 
 	/**
@@ -70,20 +89,28 @@ public class AdvancedFileUtil {
 	 *            文件夹所在目录节点对象
 	 * @param route
 	 *            文件绝对路径
+	 *  @param operationInfo
+	 *            操作者信息
 	 */
-	public static void validateDirectory(DirectoryNode directoryNode, String route) {
+	public static void validateDirectory(DirectoryNode directoryNode, String route, String operationInfo) {
 		ServerNode serverNode=directoryNode.getServerNode();
 		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
 			File file = new File(route);
 			// 如果文件夹不存在则创建
-			if (!file.exists() && !file.isDirectory())
+			if (!file.exists() && !file.isDirectory()) {
 				file.mkdir();
+				LogRecord.FileHandleInfoLogger.info(operationInfo+"make directiry at "+serverNode.Ip+": "+route);
+			}
 		} else {
 			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
 					false);
 			try {
-				String relativePath = route.substring(directoryNode.Path.length());
-				ftpClient.makeDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
+				String relativePath = route.substring(directoryNode.StorePath.length());
+				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
+				if(!flag) {
+					ftpClient.makeDirectory(relativePath);//new String(relativePath.getBytes(), "ISO-8859-1")
+					LogRecord.FileHandleInfoLogger.info(operationInfo+"make directiry at " + serverNode.Ip + ": " + route);
+				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -100,12 +127,12 @@ public class AdvancedFileUtil {
 	 *            被删除文件的文件名
 	 * @return 单个文件删除成功返回true，否则返回false
 	 */
-	private static boolean deleteLocalFile(String filePath) {
+	private static boolean deleteLocalFile(String filePath, String operationInfo) {
 		File file = new File(filePath);
 		// 路径为文件且不为空则进行删除
 		if (file.isFile() && file.exists()) {
 			file.delete();
-			LogRecord.FileHandleInfoLogger.info("delete file successful: " + "127.0.0.1/"
+			LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + "127.0.0.1/"
 					+filePath);
 		}else
 			LogRecord.FileHandleErrorLogger.error("file not exist: " + "127.0.0.1/"
@@ -120,7 +147,7 @@ public class AdvancedFileUtil {
 	 *            被删除目录的文件路径
 	 * @return 目录删除成功返回true，否则返回false
 	 */
-	private static boolean deleteLocalDirectory(String filePath) {
+	private static boolean deleteLocalDirectory(String filePath, String operationInfo) {
 		// 如果sPath不以文件分隔符结尾，自动添加文件分隔符
 //		if (!filePath.endsWith(File.separator)) {
 //			filePath = filePath + File.separator;
@@ -138,10 +165,10 @@ public class AdvancedFileUtil {
 		for (int i = 0; i < files.length; i++) {
 			// 删除子文件
 			if (files[i].isFile()) {
-				flag = deleteLocalFile(files[i].getAbsolutePath());
+				flag = deleteLocalFile(files[i].getAbsolutePath(),operationInfo);
 			}
 			else { // 删除子目录
-				flag = deleteLocalDirectory(files[i].getAbsolutePath());
+				flag = deleteLocalDirectory(files[i].getAbsolutePath(),operationInfo);
 			}
 			if (!flag) {
 				LogRecord.FileHandleErrorLogger.error("delete file fail: " + "127.0.0.1/"
@@ -151,7 +178,7 @@ public class AdvancedFileUtil {
 		}
 		// 删除当前目录
 		if (dirFile.delete()) {
-			LogRecord.FileHandleInfoLogger.info("delete directory successful: " + "127.0.0.1/"
+			LogRecord.FileHandleInfoLogger.info(operationInfo+"delete directory successful: " + "127.0.0.1/"
 					+filePath);
 			return true;
 		} else {
@@ -170,9 +197,9 @@ public class AdvancedFileUtil {
 	 *            要删除的目录或者文件的绝对路径
 	 * @return 删除成功返回 true，删除失败返回 false。
 	 */
-	public static boolean delete(DirectoryNode node, String filePath) {
+	public static boolean delete(DirectoryNode node, String filePath,String operationInfo) {
 		ServerNode serverNode = node.getServerNode();
-		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
+		if (!CommonUtil.isRemoteServer(serverNode.Ip)) {//如果是本地文件或者目录
 			File file = new File(filePath);
 			// 判断目录或文件是否存在
 			if (!file.exists()) { // 不存在返回 false
@@ -181,10 +208,10 @@ public class AdvancedFileUtil {
 				return false;
 			} else {
 				// 判断是否为文件
-				if (file.isFile()&&!file.getName().equals("Fingerprint.sys")) { // 为文件时调用删除文件方法
-					return deleteLocalFile(filePath);
+				if (file.isFile()) { // 为文件时调用删除文件方法&&!file.getName().equals("Fingerprint.sys")
+					return deleteLocalFile(filePath,operationInfo);
 				} else { // 为目录时调用删除目录方法
-					return deleteLocalDirectory(filePath);
+					return deleteLocalDirectory(filePath,operationInfo);
 				}
 			}
 		} else {// 远程文件
@@ -193,23 +220,23 @@ public class AdvancedFileUtil {
 			// ftpClient.setControlEncoding(encoding); // 中文支持
 			boolean re = false;
 			try {
-				String relativePath = filePath.substring(node.Path.length());
-				boolean flag=ftpClient.changeWorkingDirectory(new String(relativePath.getBytes(),"ISO-8859-1"));
+				String relativePath = filePath.substring(node.StorePath.length());
+				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 				if(flag){//刪除的是文件夹
 					ftpClient.changeToParentDirectory();
-					re=deleteRemoteDirectory(node,ftpClient,relativePath);//为了删除中文文件，必须加编码
+					re=deleteRemoteDirectory(node,ftpClient,relativePath,operationInfo);//为了删除中文文件，必须加编码
 					if(re==false) {
 						LogRecord.FileHandleErrorLogger.error("directory path illegal: "+serverNode.Ip + "/"
 								+ filePath);
 						return false;
 					}
 				}else{//删除的是文件
-					re=ftpClient.deleteFile(new String(relativePath.getBytes(),"ISO-8859-1"));
+					re=ftpClient.deleteFile(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
 					if(re==false)
 						LogRecord.FileHandleErrorLogger.error("file path illegal: "+serverNode.Ip + "/"
 								+ filePath);
 					else
-						LogRecord.FileHandleInfoLogger.info("delete file successful: " + serverNode.Ip + "/"
+						LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + serverNode.Ip + "/"
 								+ filePath);
 				}
 			} catch (Exception e) {
@@ -226,20 +253,20 @@ public class AdvancedFileUtil {
 	 * @param relativePath 目录或者文件
 	 * @return 删除是否成功
 	 */
-	private static  boolean deleteRemoteDirectory(DirectoryNode directoryNode, FTPClient ftpClient, String relativePath) {
+	private static  boolean deleteRemoteDirectory(DirectoryNode directoryNode, FTPClient ftpClient, String relativePath,String operationInfo) {
 		String sourceFilePath=relativePath;
 		try {
-			relativePath=new String(relativePath.getBytes(),"ISO-8859-1");
+//			relativePath=new String(relativePath.getBytes(),"ISO-8859-1");
 			FTPFile[] files = ftpClient.listFiles(relativePath);
 			for (FTPFile file : files) {
-				String fileName=new String(file.getName().getBytes("ISO-8859-1"),"gb2312");
+				String fileName=file.getName();//new String(file.getName().getBytes("ISO-8859-1"),"gb2312")
 				if (file.isDirectory()) {
-					deleteRemoteDirectory(directoryNode,ftpClient,sourceFilePath+ "/" +fileName);
+					deleteRemoteDirectory(directoryNode,ftpClient,sourceFilePath+ "/" +fileName,operationInfo);
 				}
 				if (file.isFile()) {
 					if(ftpClient.deleteFile(relativePath + "/" + file.getName())) {
 //						fileName=new String(fileName.getBytes("gb2312"), "utf-8");
-						LogRecord.FileHandleInfoLogger.info("delete file successful: " + directoryNode.getServerNode().Ip + "/"
+						LogRecord.FileHandleInfoLogger.info(operationInfo+"delete file successful: " + directoryNode.getServerNode().Ip + "/"
 								+ directoryNode.Path + sourceFilePath + "/" + fileName);
 					}
 					else {
@@ -253,7 +280,7 @@ public class AdvancedFileUtil {
 			if(re==false) {
 				return false;
 			}else
-				LogRecord.FileHandleInfoLogger.info("delete directory successful: " + directoryNode.getServerNode().Ip + "/"
+				LogRecord.FileHandleInfoLogger.info(operationInfo+"delete directory successful: " + directoryNode.getServerNode().Ip + "/"
 						+ directoryNode.Path+sourceFilePath);
 		} catch (IOException e) {
 			e.printStackTrace();

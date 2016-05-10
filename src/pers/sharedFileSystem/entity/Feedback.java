@@ -47,6 +47,9 @@ public class Feedback {
 		map.put(key, info);
 	}
 
+	public Object getFeedbackInfo(String key){
+		return map.get(key);
+	}
 	/**
 	 * 获取错误信息
 	 * 
@@ -56,6 +59,21 @@ public class Feedback {
 		return ErrorInfo;
 	}
 
+	/**
+	 * 获取错误码
+	 * @return 错误码
+	 */
+	public int getErrorcode(){
+		return Errorcode;
+	}
+	/**
+	 * 重新设置错误码
+	 * @return 新的错误码
+	 */
+	public void setErrorcode(int code){
+		this.Errorcode = code;
+		ErrorInfo = ErrorHandler.getErrorInfo(code, "");
+	}
 	/**
 	 * 通过错误代码构造反馈信息
 	 * 

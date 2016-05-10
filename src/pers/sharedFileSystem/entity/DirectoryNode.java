@@ -48,6 +48,14 @@ public class DirectoryNode extends Node implements Serializable {
 	 * Path是从该节点所属的根节点到该节点的路径，相对路径
 	 */
 	public String Path;
+	/**
+	 * 该结点的父结点对象
+	 */
+	public Node Parent;
+	/**
+	 * 扩容结点集合
+	 */
+	public List<String>ExpandNodes ;
 
 	public DirectoryNode(){
 		WhiteList = new ArrayList<FileType>();
@@ -71,6 +79,7 @@ public class DirectoryNode extends Node implements Serializable {
 		System.out.println(tabs + "Redundancy: ");
 		this.Redundancy.print(tabs + "\t");
 		System.out.println(tabs + "WhiteList: " + WhiteList.toString());
+		System.out.println(tabs + "Parent: " + Parent.Id);
 		System.out.println(tabs + "ChildNodes: "+ChildNodes.size());
 		int num=0;
 		for (DirectoryNode directoryNode : ChildNodes) {
@@ -78,6 +87,14 @@ public class DirectoryNode extends Node implements Serializable {
 				System.out.println("");
 			num++;
 			directoryNode.print(tabs + "\t");
+		}
+		System.out.println(tabs + "ExpandNodes: "+ExpandNodes.size());
+		num=0;
+		for (String expand : ExpandNodes) {
+			if(num>0)
+				System.out.println("");
+			num++;
+			System.out.print(tabs + expand);
 		}
 	}
 }

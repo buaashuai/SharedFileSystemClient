@@ -14,10 +14,9 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
@@ -27,11 +26,13 @@ import net.sf.json.JSONObject;
 
 import org.apache.commons.net.ftp.FTPClient;
 
-import pers.sharedFileSystem.bloomFilterManager.hashFunctions.SHA1_MD5;
+import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.communicationObject.RedundancyFileStoreInfo;
 import pers.sharedFileSystem.configManager.Config;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonUtil;
+import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
@@ -52,158 +53,27 @@ public class FileAdapter extends Adapter {
 	 * 单独的文件名
 	 */
 	private String fileName;
+	/**
+	 * true是链接文件；false是物理文件
+	 */
+	private boolean isLinkedFile=false;
+	/**
+	 * 如果是链接文件，则此字段表示链接文件对应的实际文件的文件指纹信息
+	 */
+	private FingerprintInfo physicalFile;
 
 	/**
 	 * 通过文件输入流对文件适配器进行初始化
 	 *
 	 * @param inputStream
 	 */
-	public FileAdapter(InputStream inputStream) {
+	public FileAdapter(InputStream inputStream,Map<String, String> parms) {
 		this.inputStream = inputStream;
+		this.PARM=parms;
 	}
 
 	public FileAdapter() {
 
-	}
-
-	/**
-	 * 根据指纹信息验证文件是否存在
-	 *
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param figurePrint
-	 *            文件指纹信息
-	 * @return 文件存在返回文件绝对地址 ，否则返回false
-	 */
-	public static  JSONObject isFileExistInBloomFilter(String desNodeId, String figurePrint) {
-		Feedback feedback = null;
-		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				feedback = new Feedback(3001 ,"");
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return feedback.toJsonObject();
-			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.CHECK_REDUNDANCY;
-			queryMessage.content.put("figurePrint",figurePrint);
-			queryMessage.content.put("desNodeId",desNodeId);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
-			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
-			MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
-			if (replyMessage != null
-					&& replyMessage.messageType == MessageType.REPLY_CHECK_REDUNDANCY) {
-				if (replyMessage.content.get("messageCode").equals("4002")) {
-					feedback = new Feedback(3010 ,"");
-					return feedback.toJsonObject();
-				}else if (replyMessage.content.get("messageCode").equals("4000")){
-					feedback = new Feedback(3000 ,"");
-					//并返回指纹信息
-					feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-					return feedback.toJsonObject();
-				}else if(replyMessage.content.get("messageCode").equals("4003")){
-					feedback = new Feedback(3015 ,"");
-					return feedback.toJsonObject();
-				}
-			}
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-			feedback = new Feedback(3001 ,e.toString());
-			return feedback.toJsonObject();
-		}
-		feedback = new Feedback(3001 ,"");
-		return feedback.toJsonObject();
-	}
-
-	/**
-	 * 向存储服务器发送添加映射信息指令
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param keyPath 节目录节点相对路径（相对该节点的根存储根路径）
-	 * @param otherFilePath 该目录节点下的存储在其他文件夹里面的冗余文件的相对路径
-	 */
-	private JSONObject sendRedundancyFileStoreInfoMessage(String desNodeId, String keyPath, String otherFilePath){
-		Feedback feedback = null;
-		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				feedback = new Feedback(3001 ,"");
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return feedback.toJsonObject();
-			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.ADD_REDUNDANCY_INFO;
-			queryMessage.content.put("desNodeId",desNodeId);
-			queryMessage.content.put("keyPath",keyPath);
-			queryMessage.content.put("otherFilePath",otherFilePath);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
-			ObjectInputStream ois = new ObjectInputStream(
-					socket.getInputStream());
-			MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
-			if (replyMessage != null
-					&& replyMessage.messageType == MessageType.REPLY_ADD_REDUNDANCY_INFO) {
-				if (replyMessage.content.get("messageCode").equals("4002")) {
-					feedback = new Feedback(3010 ,"");
-					return feedback.toJsonObject();
-				}else if (replyMessage.content.get("messageCode").equals("4000")){
-					feedback = new Feedback(3000 ,"");
-					//并返回指纹信息
-					feedback.addFeedbackInfo(replyMessage.content.get("filePath"));
-					return feedback.toJsonObject();
-				}else if(replyMessage.content.get("messageCode").equals("4003")){
-					feedback = new Feedback(3015 ,"");
-					return feedback.toJsonObject();
-				}
-			}
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-			feedback = new Feedback(3001 ,e.toString());
-			return feedback.toJsonObject();
-		}
-		feedback = new Feedback(3001 ,"");
-		return feedback.toJsonObject();
-	}
-	/**
-	 * 给服务端的文件系统发送指纹置位命令
-	 *
-	 * @param desNodeId
-	 *            目的节点id
-	 * @param figurePrint
-	 *            文件指纹信息
-	 */
-	public void sendAddFigurePrintMessage(String desNodeId, FingerprintInfo figurePrint) {
-		try {
-			Node node = Config.getNodeByNodeId(desNodeId);
-//			Socket socket = FileSystemClient.getSocketByServerNodeId(node
-//					.getServerNode().Id);
-			Socket socket=new Socket(node.getServerNode().Ip, node.getServerNode().ServerPort);
-			if(socket==null){
-				LogRecord.RunningErrorLogger.error("socket not initial ["+node.getServerNode().Ip+"]");
-				return;
-			}
-			MessageProtocol queryMessage = new MessageProtocol();
-			queryMessage.messageType = MessageType.ADD_FINGERPRINT;
-			queryMessage.content.put("figurePrint",figurePrint.Md5);
-			queryMessage.content.put("FilePath",figurePrint.FilePath);
-			queryMessage.content.put("FileName",figurePrint.FileName);
-			queryMessage.content.put("desNodeId",desNodeId);
-			ObjectOutputStream oos = new ObjectOutputStream(
-					socket.getOutputStream());
-			oos.writeObject(queryMessage);
-		} catch (Exception e) {
-			LogRecord.RunningErrorLogger.error(e.toString());
-		}
 	}
 
 	/**
@@ -216,7 +86,7 @@ public class FileAdapter extends Adapter {
 	 *            路径参数
 	 */
 	public FileAdapter(String sourceNodeId, String fileName,
-					   Map<String, String> parms) {
+					   Map<String, String> parms){
 		Node n=Config.getNodeByNodeId(sourceNodeId);
 		if(n==null||n instanceof ServerNode) {
 			LogRecord.FileHandleErrorLogger.error("["+sourceNodeId+"] is not a DirectoryNode id");
@@ -225,31 +95,64 @@ public class FileAdapter extends Adapter {
 		DirectoryNode node = (DirectoryNode)n;
 		this.NODE = node;
 		this.NODEID = sourceNodeId;
+		this.PARM=parms;
 		this.fileName = fileName;
 		// 初始化节点的相对路径
 		JSONObject nodePathFeed = CommonFileUtil.initFilePath(sourceNodeId,
-				parms, false);
+				parms, false,this.getOperationInfo());
 		// 在指定的节点下生成文件夹路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
+		this.RELATIVE_FILEPATH="/";
 		if (jsonArray.size() < 1)
-			this.FILEPATH = node.StorePath + "/" + fileName;
+			this.FILEPATH = node.StorePath + this.RELATIVE_FILEPATH + fileName;
 		else {
-			String filePath = jsonArray.getString(0);
-			this.FILEPATH = node.StorePath + filePath + "/"
+			this.RELATIVE_FILEPATH= jsonArray.getString(0)+ "/";//文件相对路径
+			this.FILEPATH = node.StorePath +  this.RELATIVE_FILEPATH
 					+ fileName;
 		}
-		if(!new File(this.FILEPATH).exists()){
-			LogRecord.FileHandleErrorLogger.error("file not exist: "
-					+ node.getServerNode().Ip + "/" + this.FILEPATH);
+		//如果是去冗文件夹，获取该文件夹里面存放在其他目录（或者本目录）下的冗余文件
+		if(this.NODE.Redundancy.Switch){
+			ServerNode serverNode = this.NODE.getServerNode();
+			Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id, this.RELATIVE_FILEPATH );
+			if(feedback.getErrorcode()==3000) {//表示存在冗余文件
+				ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+				for(FingerprintInfo info:otherPath) {
+					if(info.getFileName().equals(fileName)){
+						isLinkedFile=true;
+						physicalFile=info;
+						break;
+					}
+				}
+			}
 		}
+		//构造函数优先考虑链接文件，这样的好处是：同一个目录引用同一个目录下的冗余文件，优先删除链接文件，而不会对原始文件造成破坏
+		if(!isLinkedFile) {
+			if (!AdvancedFileUtil.isFileExist(node, node.StorePath + this.RELATIVE_FILEPATH, fileName, false)) {
+//					this.NODE = null;
+//					this.NODEID = "";
+//					this.fileName = "";
+					this.FILEPATH = "";//可以通过此字段是否为空判断文件是否存在
+//					this.RELATIVE_FILEPATH = "";
+					LogRecord.FileHandleErrorLogger.error("source file not exist: "
+							+ node.getServerNode().Ip + "/" + this.FILEPATH);
+					return;
+			}
+		}
+		if(isLinkedFile)
+			LogRecord.FileHandleErrorLogger.error("source file is Linked File: "
+					+ node.getServerNode().Ip + "/" + this.FILEPATH);
+		else
+			LogRecord.FileHandleErrorLogger.error("source file is Physical File: "
+					+ node.getServerNode().Ip + "/" + this.FILEPATH);
 	}
 
 	/**
 	 * 通过文件路径对文件适配器进行初始化
 	 *
 	 */
-	public FileAdapter(String filePath) {
+	public FileAdapter(String filePath,Map<String, String> parms) {
 		this.FILEPATH = filePath;
+		this.PARM=parms;
 	}
 
 	/**
@@ -292,15 +195,54 @@ public class FileAdapter extends Adapter {
 	 */
 	public JSONObject delete() {
 		Feedback feedback = null;
-		if(this.fileName.equals("Fingerprint.sys")){
-			feedback = new Feedback(3013, "");
-			return feedback.toJsonObject();
+//		if(this.fileName.equals("Fingerprint.sys")){
+//			feedback = new Feedback(3013, "");
+//			return feedback.toJsonObject();
+//		}
+		if(isLinkedFile){//如果删除的是链接文件
+			ServerNode serverNode = this.NODE.getServerNode();
+			RedundancyFileStoreInfo redundancyFileStoreInfo=new RedundancyFileStoreInfo();
+			redundancyFileStoreInfo.essentialStorePath= this.RELATIVE_FILEPATH;
+			ArrayList<FingerprintInfo> otherFileInfo=new ArrayList<FingerprintInfo>();
+			FingerprintInfo info=new FingerprintInfo();
+			info.setFileName(this.fileName);
+			otherFileInfo.add(info);
+			redundancyFileStoreInfo.otherFileInfo=otherFileInfo;
+			Feedback re=FileSystemClient.sendDeleteRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向目的结点存储服务器发送删除映射信息指令
+			if(re.getErrorcode() != 3000) {
+				re.setErrorcode(3024);
+			}
+			//获取实际文件的存储节点信息
+			Node nn=Config.getNodeByNodeId(physicalFile.getNodeId());
+			if(nn==null||nn instanceof ServerNode) {
+				LogRecord.FileHandleErrorLogger.error("["+physicalFile.getNodeId()+"] is not a DirectoryNode id");
+				feedback = new Feedback(3011, physicalFile.getNodeId());
+				return feedback.toJsonObject();
+			}
+			DirectoryNode node2 = (DirectoryNode)nn;// 保存文件的目的节点
+			ServerNode s2 = node2.getServerNode();// 保存文件的目的节点所属的根节点
+			Feedback re2=FileSystemClient.sendDeleteFrequencyMessage(s2.Id, physicalFile);//向实际文件的存储服务器发送删除文件引用指令
+			if(re2.getErrorcode() != 3000)
+				re.setErrorcode(3025);
+			return re.toJsonObject();
+		}else {//如果删除的是物理文件
+			if (this.NODE.Redundancy.Switch) {//如果删除结点是去冗结点
+				ServerNode serverNode = this.NODE.getServerNode();// 保存文件的目的节点所属的根节点
+				FingerprintInfo fInfo = new FingerprintInfo();
+				fInfo.setFilePath(this.RELATIVE_FILEPATH);
+				fInfo.setFileName(this.fileName);
+				Feedback re=FileSystemClient.sendDeleteFingerprintInfoMessage(serverNode.Id, fInfo);//向存储服务器发送删除指纹信息指令
+				if(re.getErrorcode() != 3000)
+					re.setErrorcode(3026);
+				return re.toJsonObject();
+			}else {//如果删除的结点不是去冗结点，直接删除物理文件
+				if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH,this.getOperationInfo()))
+					feedback = new Feedback(3000, "");
+				else
+					feedback = new Feedback(3001, "");
+				return feedback.toJsonObject();
+			}
 		}
-		if (AdvancedFileUtil.delete(this.NODE, this.FILEPATH))
-			feedback = new Feedback(3000, "");
-		else
-			feedback = new Feedback(3001, "");
-		return feedback.toJsonObject();
 	}
 
 	/**
@@ -354,6 +296,7 @@ public class FileAdapter extends Adapter {
 			}
 			g2d.dispose();
 			ImageIO.write(image, "png", outFile);// 输出png图片
+			LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"make png file at " + this.NODE.getServerNode().Ip + ": " + this.FILEPATH);
 			feedback = new Feedback(3000, "");
 			feedback.addFeedbackInfo(this.FILEPATH.substring(this.NODE.StorePath.length()));// fileName已经带有后缀名
 			return feedback.toJsonObject();// (baseFilePath.length()).replaceAll("\\\\",
@@ -460,27 +403,32 @@ public class FileAdapter extends Adapter {
 			if (!CommonUtil.isRemoteServer(ip)) {// 保存到本地
 				File newFile = new File(fullPath);
 				newFile.createNewFile();
-				byte[] bs = new byte[1024];// 1Kb
+				byte[] bs = new byte[1024*1024];// 1Mb
 				int len = stream2.read(bs);
 				outputStream = new FileOutputStream(newFile);
 				while (len > 0) {
 					outputStream.write(bs);
-					bs = new byte[1024];// 1Kb
+					bs = new byte[1024*1024];// 1Mb
 					len = stream2.read(bs);
 				}
 			} else {// 保存到远程服务器
 				FTPClient ftpClient = null;
-				if (this.NODE!=null&&destRootNode.getServerNode().Ip.equals(this.NODE.getServerNode().Ip))
+				synchronized (this) {
 					ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
 							true);
-				else {
-					ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
-							false);
+//					if (this.NODE!=null&&destRootNode.getServerNode().Ip.equals(this.NODE.getServerNode().Ip))
+//						ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
+//								true);
+//					else {
+//						ftpClient = FTPUtil.getFTPClientByServerNode(destRootNode.getServerNode(),
+//								false);//false
+//					}
+					String relativePath = destFilePath.substring(destRootNode.StorePath
+							.length());
+						ftpClient.changeWorkingDirectory(relativePath);
+						ftpClient.storeFile(fileName, stream2);
+//					ftpClient.disconnect();//断开连接
 				}
-				String relativePath = destFilePath.substring(destRootNode.Path
-						.length());
-				ftpClient.changeWorkingDirectory(relativePath);
-				ftpClient.storeFile(fileName, stream2);
 			}
 			return true;
 		} catch (Exception e) {
@@ -522,19 +470,26 @@ public class FileAdapter extends Adapter {
 			return feedback.toJsonObject();
 		}
 		DirectoryNode node = (DirectoryNode)n;// 保存文件的目的节点
+		String desNodeId2=CommonUtil.getDestDirectoryNode(node, parms,true);//获取保存文件的实际结点编号
+		if(!desNodeId2.equals(desNodeId))
+			return saveFileTo(desNodeId2,fileName,parms);//重定向到新的目录结点
+
 		ServerNode serverNode = node.getServerNode();// 保存文件的目的节点所属的根节点
 		// 初始化节点的相对路径
 		JSONObject nodePathFeed = CommonFileUtil.initFilePath(desNodeId,
-				parms, false);
+				parms, false,this.getOperationInfo());
 		if (nodePathFeed.getInt("Errorcode") != 3000) {
 			return nodePathFeed;
 		}
-		// 获取文件夹路径
+		// 获取目的节点相对路径
 		JSONArray jsonArray = nodePathFeed.getJSONArray("Info");
-		// 生成文件路径
+		// 文件绝对路径
 		String destFilePath = node.StorePath;
+		//文件相对路径
+		String relativePath="/";
 		if(jsonArray.size()>0){
 			destFilePath+=jsonArray.getString(0)+ "/";
+			relativePath=jsonArray.getString(0)+ "/";
 		}
 		try {
 			if (inputStream == null && CommonUtil.validateString(this.FILEPATH)) {
@@ -545,7 +500,40 @@ public class FileAdapter extends Adapter {
 				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
 				return feedback.toJsonObject();
 			}
-			ByteArrayOutputStream baos = inputStreamToByte(inputStream);
+			//超过1G的文件会出现内存不足
+			ByteArrayOutputStream baos =null;
+
+//			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
+
+//			byte[] bs = new byte[1024];// 1Kb
+//			int len = 0;
+//			len = stream1.read(bs);
+			// 第一次读取输入流，用来判断文件类型， 以及该文件类型是否符合节点的白名单规定
+			String fileSuffix = fileName.substring(fileName
+					.lastIndexOf('.') + 1);// 用户上传的文件后缀
+			FileType fileType = CommonFileUtil.getFileType(fileSuffix);
+			// 文本文件无法用文件头进行识别，因此默认为用户上传的文件后缀
+//			String fileSuffix=parms.get("fileSuffix");
+
+			if (!CommonFileUtil.isLegalFile(node, fileType,fileSuffix)) {
+				feedback = new Feedback(3006, "文件类型：" + fileType);
+				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
+				return feedback.toJsonObject();
+			}
+
+			// 判断fileName是否有后缀名
+//			if (!fileName.contains(".")) {
+//				if (fileType == FileType.UNCERTAIN) {
+//					if(CommonUtil.validateString(fileSuffix))
+//						fileName += "." + fileSuffix;
+//					else{
+//						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
+//						feedback = new Feedback(3016, "");
+//						return feedback.toJsonObject();
+//					}
+//				}else
+//					fileName += "." + fileType.toString();
+//			}
 
 			if (node.Redundancy.Switch) {//如果上传的节点需要进行文件删冗
 				// 布隆过滤器置位
@@ -558,6 +546,7 @@ public class FileAdapter extends Adapter {
 					}
 				}
 				else if(node.Redundancy.FingerGenType== FingerGenerateType.SERVER){
+					baos= inputStreamToByte(inputStream);
 					InputStream stream3 = new ByteArrayInputStream(baos.toByteArray());
 					SHA1_MD5 sha1_md5=new SHA1_MD5();
 					fingerPrint = sha1_md5.digestFile(stream3,SHA1_MD5.MD5);
@@ -569,61 +558,42 @@ public class FileAdapter extends Adapter {
 					}
 					LogRecord.FileHandleInfoLogger.info("generate new md5:"+fingerPrint);
 				}
-
-				JSONObject re= isFileExistInBloomFilter(desNodeId, fingerPrint);
-				if(re.getInt("Errorcode") == 3000){//表示指纹信息存在
+				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,fileType);
+				Feedback re=FileSystemClient.isFileExistInBloomFilter(fInfo);
+				if(re.getErrorcode() == 3000){//表示指纹信息存在
 					//给客户端返回文件存储的位置
-					feedback = new Feedback(3000, "");
-					String strP=re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
-					feedback.addFeedbackInfo(strP);
-					feedback.addFeedbackInfo("repeat",true);
-					String keyPath="";
-					if(jsonArray.size()>0) {//存储到非根节点
-						keyPath=jsonArray.getString(0) + "/";
-					}
-					else {//存储到根节点
-						keyPath="/";
-					}
-					sendRedundancyFileStoreInfoMessage(desNodeId,keyPath, strP);//向存储服务器发送添加映射信息指令
-					return feedback.toJsonObject();
-				}
-
-			}
-
-			InputStream stream1 = new ByteArrayInputStream(baos.toByteArray());
-
-			byte[] bs = new byte[1024];// 1Kb
-			int len = 0;
-			len = stream1.read(bs);
-			// 第一次读取输入流，用来判断文件类型， 以及该文件类型是否符合节点的白名单规定
-			FileType fileType = CommonFileUtil.getFileType(bs);// 目前没法识别XML、TXT这些文本文件，只能通过后缀名识别，因为他们的文件头不固定
-			// 文本文件无法用文件头进行识别，因此默认为用户上传的文件后缀
-			String fileSuffix=parms.get("fileSuffix");
-
-			if (!CommonFileUtil.isLegalFile(bs, node, fileType,fileSuffix)) {
-				feedback = new Feedback(3006, "文件类型：" + fileType);
-				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo());
-				return feedback.toJsonObject();
-			}
-
-			// 判断fileName是否有后缀名
-			if (!fileName.contains(".")) {
-				if (fileType == null) {
-					if(CommonUtil.validateString(fileSuffix))
-						fileName += "." + fileSuffix;
-					else{
-						LogRecord.FileHandleErrorLogger.error("client miss fileSuffix");
-						feedback = new Feedback(3016, "");
+					//re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
+					re.addFeedbackInfo("repeat",true);
+					FingerprintInfo ff=(FingerprintInfo)re.getFeedbackInfo("FingerprintInfo");
+					RedundancyFileStoreInfo redundancyFileStoreInfo=new RedundancyFileStoreInfo();
+					redundancyFileStoreInfo.addFingerprintInfo(ff);
+					redundancyFileStoreInfo.essentialStorePath=relativePath;
+					Feedback re2=FileSystemClient.sendAddRedundancyFileStoreInfoMessage(serverNode.Id, redundancyFileStoreInfo);//向目的结点存储服务器发送添加映射信息指令
+					//获取实际文件的存储节点信息
+					Node nn=Config.getNodeByNodeId(ff.getNodeId());
+					if(nn==null||nn instanceof ServerNode) {
+						LogRecord.FileHandleErrorLogger.error("["+ff.getNodeId()+"] is not a DirectoryNode id");
+						feedback = new Feedback(3011, ff.getNodeId());
 						return feedback.toJsonObject();
 					}
-				}else
-					fileName += "." + fileType.toString();
+					DirectoryNode node2 = (DirectoryNode)nn;// 保存文件的目的节点
+					ServerNode s2 = node2.getServerNode();// 保存文件的目的节点所属的根节点
+					Feedback re3=FileSystemClient.sendAddFrequencyMessage(s2.Id,ff);//向实际文件的存储服务器发送添加文件引用指令
+					if(re2.getErrorcode() != 3000)
+						re.setErrorcode(3018);
+					if(re3.getErrorcode() != 3000)
+						re.setErrorcode(3022);
+					return re.toJsonObject();
+				}else{
+					LogRecord.RunningInfoLogger.info(re);
+				}
 			}
+
+
 			// 判断文件是否存在
 			boolean type = false;
 			if (this.NODE != null
 					&& serverNode.Ip.equals(this.NODE.getServerNode().Ip))
-				type = true;
 			if (AdvancedFileUtil.isFileExist(node, destFilePath,
 					fileName, type)) {
 				feedback = new Feedback(3002, "");
@@ -632,27 +602,39 @@ public class FileAdapter extends Adapter {
 						+ "]");
 				return feedback.toJsonObject();
 			}
-
-			InputStream stream2 = new ByteArrayInputStream(baos.toByteArray());
+			InputStream stream2 =inputStream;
+			if (node.Redundancy.Switch&&node.Redundancy.FingerGenType== FingerGenerateType.SERVER)
+				stream2 = new ByteArrayInputStream(baos.toByteArray());
 
 			// 将文件流写入磁盘
 			boolean result = saveFile(stream2, node, destFilePath,
 					fileName);
 			if (result) {
-				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,destFilePath,fileName);
-				sendAddFigurePrintMessage(desNodeId, fInfo);//向布隆过滤器添加指纹
+				if (node.Redundancy.Switch) {
+					FingerprintInfo fInfo = new FingerprintInfo(fingerPrint,desNodeId, relativePath, fileName,fileType);
+					Feedback re=FileSystemClient.sendAddFigurePrintMessage(fInfo);//向冗余验证服务器的布隆过滤器添加指纹
+					Feedback re2=FileSystemClient.sendAddFingerprintInfoMessage(serverNode.Id, fInfo);//向存储服务器发送添加指纹信息指令
+					if(re.getErrorcode() != 3000){
+						feedback = new Feedback(3017, "");
+						return feedback.toJsonObject();
+					}
+					if(re2.getErrorcode() != 3000){
+						feedback = new Feedback(3020, "");
+						return feedback.toJsonObject();
+					}
+				}
 				feedback = new Feedback(3000, "");
 				if(jsonArray.size()>0) {
 					feedback.addFeedbackInfo(jsonArray.getString(0) + "/"
 							+ fileName);// fileName已经带有后缀名
-					LogRecord.FileHandleInfoLogger.info("save file successful: "
+					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
 							+ jsonArray.getString(0) + "/" + fileName);
 				}
 				else {
 					feedback.addFeedbackInfo("/"
 							+ fileName);// fileName已经带有后缀名
-					LogRecord.FileHandleInfoLogger.info("save file successful: "
+					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
 							+ "/" + fileName);
 				}

@@ -13,6 +13,34 @@ public enum FileType implements Serializable {
 	 */
 	ANY("0000000000"),
 	/**
+	 * 无法确定文件类型
+	 */
+	UNCERTAIN("??????????"),
+	/**
+	 * EXCEL
+	 */
+	XLS("??????????"),
+	/**
+	 * EXCEL
+	 */
+	XLSX("??????????"),
+	/**
+	 * CSV
+	 */
+	CSV("??????????"),
+	/**
+	 * jpg
+	 */
+	JPG("??????????"),
+	/**
+	 * 目录文件类型
+	 */
+	DIRECTORY("directory"),
+	/**
+	 * 普通文件类型
+	 */
+	DOCUMENT("document"),
+	/**
 	 * JEPG.jpg
 	 */
 	JPEG("ffd8ffe000104a464946"),
@@ -264,7 +292,7 @@ public enum FileType implements Serializable {
 	/**
 	 * Constructor.
 	 * 
-	 * @param type
+	 * @param value
 	 */
 	FileType(String value) {
 		this.value = value;

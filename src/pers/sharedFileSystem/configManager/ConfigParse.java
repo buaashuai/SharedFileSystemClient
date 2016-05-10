@@ -84,7 +84,7 @@ public class ConfigParse {
     private DirectoryNode parseDirectoryNode(Element element, String path,
                                              Hashtable<String, DirectoryNode> directoryNodeTable,
                                              List<FileType> whiteList, RedundancyInfo redundancy,
-                                             ServerNode serverNode,String storePath) {
+                                             ServerNode serverNode,String storePath,Node parent) {
         DirectoryNode directoryNode = new DirectoryNode();
         directoryNode.WhiteList = whiteList;
         directoryNode.Redundancy = redundancy;
@@ -128,13 +128,14 @@ public class ConfigParse {
             // 父节点的白名单就是子节点的白名单，父节点的删冗信息就是子节点的删冗信息
             c_directoryNode = parseDirectoryNode(e, path, directoryNodeTable,
                     directoryNode.WhiteList, directoryNode.Redundancy,
-                    serverNode,directoryNode.StorePath);
+                    serverNode,directoryNode.StorePath,directoryNode);
             childNodes.add(c_directoryNode);
             directoryNodeTable.put(c_directoryNode.Id, c_directoryNode);// 每解析出一个子节点就将它加入directoryNodeTable
         }
         directoryNodeTable.put(directoryNode.Id, directoryNode);// 每解析出一个节点就将它加入directoryNodeTable
         directoryNode.Path = path;
         directoryNode.ChildNodes = childNodes;
+        directoryNode.Parent=parent;
         return directoryNode;
     }
 
@@ -170,6 +171,8 @@ public class ConfigParse {
         serverNode.Id = element.getAttributeValue("id");
         serverNode.UserName = element.getChildText("userName");
         serverNode.Password = element.getChildText("password");
+        serverNode.URL = element.getChildText("url");
+        serverNode.isRunning=true;
         List<Element> e_directoryNodes = element.getChildren("directoryNode");
         List<Element> e_backupNodes = element.getChildren("backupNode");
         List<DirectoryNode> childNodes = new ArrayList<DirectoryNode>();
@@ -177,13 +180,18 @@ public class ConfigParse {
             DirectoryNode directoryNode = new DirectoryNode();
             directoryNode = parseDirectoryNode(e, "", directoryNodeTable,
                     directoryNode.WhiteList, directoryNode.Redundancy,
-                    serverNode,"");
+                    serverNode,"",serverNode);
             childNodes.add(directoryNode);
         }
+        String backupNodeId="";
         for(Element e:e_backupNodes){
             BackupNode backupNode=parseBackupNode(e);
+            //第一个备份节点为默认备份节点
+            if(backupNodeId=="")
+                backupNodeId=backupNode.Id;
             backupNodeTable.put(backupNode.Id,backupNode);
         }
+        serverNode.BackupNodeId=backupNodeId;
         serverNode.DirectoryNodeTable = directoryNodeTable;
         serverNode.BackupNodeTable=backupNodeTable;
         serverNode.ChildNodes = childNodes;
@@ -307,8 +315,8 @@ public class ConfigParse {
         }
         Element element = doc.getRootElement();
         SystemConfig systemConfig = new SystemConfig();
-        systemConfig.FileSystemPort = Integer.parseInt(element.getChildText("fileSystemPort"));
-        systemConfig.ServerNodeName = element.getChildText("serverNodeName");
+        systemConfig.Port = Integer.parseInt(element.getChildText("port"));
+        systemConfig.Ip = element.getChildText("ip");
         Config.SYSTEMCONFIG = systemConfig;
     }
 }

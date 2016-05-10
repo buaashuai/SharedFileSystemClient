@@ -9,11 +9,12 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.entity.BackupNode;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 /**
- * 
+ * 客户端和存储服务器之间的FTP管理类
  * @author buaashuai
  *
  */
@@ -59,17 +60,32 @@ public class FTPUtil {
 	 */
 	public static FTPClient getFTPClientByServerNode(ServerNode serverNode,
 			boolean type) {
+		String ip="",userName="",pass="";
+		int port=-1;
+		//如果存储节点故障，切换至备份节点
+		if(serverNode.isRunning){
+			ip=serverNode.Ip;
+			port=serverNode.Port;
+			userName=serverNode.UserName;
+			pass= serverNode.Password;
+		}else{
+			BackupNode backupNode = serverNode.BackupNodeTable.get(serverNode.BackupNodeId);
+			if(backupNode!=null) {
+				ip = backupNode.Ip;
+				port = backupNode.Port;
+				userName = backupNode.UserName;
+				pass = backupNode.Password;
+			}
+		}
 		if (type)
-			return getFTPClient(serverNode.Ip, serverNode.Port,
-					serverNode.UserName, serverNode.Password);
+			return getFTPClient(ip, port,userName,pass);
+
 		FTPClient ftpClient = FTPCLIENT.get(serverNode.Id);
-		if (ftpClient != null)
+		if (ftpClient != null) {
 			return ftpClient;
+		}
 		else {
-			FTPCLIENT.put(
-					serverNode.Id,
-					getFTPClient(serverNode.Ip, serverNode.Port,
-							serverNode.UserName, serverNode.Password));
+			FTPCLIENT.put(serverNode.Id,getFTPClient(ip, port,userName,pass));
 			return FTPCLIENT.get(serverNode);
 		}
 	}

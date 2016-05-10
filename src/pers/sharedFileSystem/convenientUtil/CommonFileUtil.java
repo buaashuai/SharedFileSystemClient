@@ -1,5 +1,6 @@
 package pers.sharedFileSystem.convenientUtil;
 
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Map;
 
@@ -78,30 +79,65 @@ public class CommonFileUtil {
                 return type;
             }
         }
-        return null;
+        return FileType.UNCERTAIN;
+    }
+
+    /**
+     * 获取文件类型
+     *
+     * @param fileSuffix 文件后缀名
+     * @return 文件类型
+     */
+    public static FileType getFileType(String fileSuffix) {
+        FileType[] fileTypes = FileType.values();
+        fileSuffix=fileSuffix.toUpperCase();
+        for (FileType type : fileTypes) {
+            if (type.toString().equals(fileSuffix)) {
+                return type;
+            }
+        }
+        return FileType.UNCERTAIN;
     }
 
     /**
      * 判断保存的文件是否符合节点白名单的规定
      *
-     * @param bs   文件的部分输入流
      * @param node 待保存的节点
      * @param fileSuffix 文件后缀名
      * @return 是否符合规定
      */
-    public static boolean isLegalFile(byte[] bs, Node node, FileType fileType,String fileSuffix) {
+    public static boolean isLegalFile(Node node, FileType fileType,String fileSuffix) {
         if (node instanceof DirectoryNode) {
             DirectoryNode dNode = (DirectoryNode) node;
-            if (fileType == null) {// 对于无法自动识别的文件类型，单独做处理
+            if (fileType == FileType.UNCERTAIN) {// 对于无法自动识别的文件类型，单独做处理
                 for (FileType f : dNode.WhiteList) {
                     if (f.toString().equals(fileSuffix.toUpperCase())) {
                         return true;
                     }
                 }
             }
-            if (dNode.WhiteList.contains(FileType.ANY) || fileType != null
+            if (dNode.WhiteList.contains(FileType.ANY) || fileType != FileType.UNCERTAIN
                     && dNode.WhiteList.contains(fileType))
                 return true;
+        }
+        return false;
+    }
+
+    /**
+     * 判断保存的文件是否符合节点白名单的规定
+     *
+     * @param node 待保存的节点
+     * @param fileSuffix 文件后缀名
+     * @return 是否符合规定
+     */
+    public static boolean isLegalFile(Node node, String fileSuffix) {
+        if (node instanceof DirectoryNode) {
+            DirectoryNode dNode = (DirectoryNode) node;
+            for (FileType f : dNode.WhiteList) {
+                if (f.toString().equals(fileSuffix.toUpperCase())) {
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -115,7 +151,7 @@ public class CommonFileUtil {
      * @return absoluteOrRelative = true 返回绝对路径，false 返回相对路径
      */
     public static JSONObject initFilePath(String nodeId,
-                                          Map<String, String> parms, boolean absoluteOrRelative) {
+                                          Map<String, String> parms, boolean absoluteOrRelative,String operationInfo) {
         Node n = Config.getNodeByNodeId(nodeId);
         DirectoryNode node=(DirectoryNode)n;
         ServerNode serverNode = node.getServerNode();
@@ -127,7 +163,7 @@ public class CommonFileUtil {
         for (int i = 0; i < paths.length; i++) {
             // 找到动态命名节点
             if (paths[i].contains(Config.getPREFIX())) {
-                key = paths[i].substring(1);
+                key = paths[i].substring(Config.getPREFIX().length());
                 alt = parms.get(key);
                 if (CommonUtil.validateString(alt))
                     orignPath = orignPath.replaceAll(paths[i], alt);
@@ -140,7 +176,7 @@ public class CommonFileUtil {
                 }
             }
         }
-        generateFilePath(node, orignPath);
+        generateFilePath(node, orignPath,operationInfo);
         if (absoluteOrRelative)
             orignPath = node.StorePath + orignPath;
         Feedback feedback = new Feedback(3000, "");
@@ -155,14 +191,14 @@ public class CommonFileUtil {
      * @param path     文件在该节点下的相对路径
      * @return 反馈信息
      */
-    private static void generateFilePath(DirectoryNode rootNode, String path) {
+    private static void generateFilePath(DirectoryNode rootNode, String path, String operationInfo) {
         String[] paths = path.split("/");
         String root = rootNode.StorePath;
         for (int i = 0; i < paths.length; i++) {
             if (!CommonUtil.validateString(paths[i]))
                 continue;
             root += "/" + paths[i];
-            AdvancedFileUtil.validateDirectory(rootNode, root);
+            AdvancedFileUtil.validateDirectory(rootNode, root,operationInfo);
         }
     }
 
