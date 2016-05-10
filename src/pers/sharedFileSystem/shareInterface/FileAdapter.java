@@ -594,15 +594,14 @@ public class FileAdapter extends Adapter {
 			boolean type = false;
 			if (this.NODE != null
 					&& serverNode.Ip.equals(this.NODE.getServerNode().Ip))
-				type = true;
-//			if (AdvancedFileUtil.isFileExist(node, destFilePath,
-//					fileName, type)) {
-//				feedback = new Feedback(3002, "");
-//				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo()
-//						+ " [" + serverNode.Ip + "/" + destFilePath + fileName
-//						+ "]");
-//				return feedback.toJsonObject();
-//			}
+			if (AdvancedFileUtil.isFileExist(node, destFilePath,
+					fileName, type)) {
+				feedback = new Feedback(3002, "");
+				LogRecord.FileHandleErrorLogger.error(feedback.getErrorInfo()
+						+ " [" + serverNode.Ip + "/" + destFilePath + fileName
+						+ "]");
+				return feedback.toJsonObject();
+			}
 			InputStream stream2 =inputStream;
 			if (node.Redundancy.Switch&&node.Redundancy.FingerGenType== FingerGenerateType.SERVER)
 				stream2 = new ByteArrayInputStream(baos.toByteArray());
