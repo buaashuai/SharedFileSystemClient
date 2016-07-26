@@ -356,7 +356,7 @@ public class FileSystemClient {
         return feedback;
     }
     /**
-     * 向存储服务器发送添加文件引用指令
+     * 向存储服务器发送添加文件引用频率指令
      * @param serverNodeId
      *            存储服务器编号
      * @param fingerprintInfo 文件相关信息
@@ -381,7 +381,7 @@ public class FileSystemClient {
         return feedback;
     }
     /**
-     * 向存储服务器发送删除文件引用指令
+     * 向存储服务器发送删除文件引用频率指令
      * @param serverNodeId
      *            存储服务器编号
      * @param fingerprintInfo 文件相关信息
