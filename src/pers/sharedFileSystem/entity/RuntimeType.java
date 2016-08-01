@@ -14,7 +14,11 @@ public enum RuntimeType {
      */
     SERVER,
     /**
-     * 客户端
+     * windows 客户端
      */
-    CLIENT
+    CLIENT,
+    /**
+     * linux部署
+     */
+    LINUX
 }

@@ -225,6 +225,14 @@ public class ConfigParse {
                         .getResourceAsStream(
                                 "/FileConfig.xml");
                 doc = builder.build(in);
+            }else if (Config.runtimeType == RuntimeType.LINUX) {
+                path = this.getClass().getProtectionDomain().getCodeSource()
+                        .getLocation().getPath();
+//    			LogRecord.RunningInfoLogger.info("path="+path);
+                tpath = path.substring(0, path.indexOf("WEB-INF"));
+//			    LogRecord.RunningInfoLogger.info("tpath="+tpath);
+                docPath = tpath + "WEB-INF/classes/FileConfig.xml";
+                doc = builder.build(docPath);
             }
             // 单独放置在API系统里面是下面的代码，在文件系统中是上面的代码
             // InputStream in = this.getClass().getResourceAsStream(
@@ -306,6 +314,15 @@ public class ConfigParse {
                         .getResourceAsStream(
                                 "/SystemConfig.xml");
                 doc = builder.build(in);
+            }else if(Config.runtimeType == RuntimeType.LINUX){
+                path = this.getClass().getProtectionDomain().getCodeSource()
+                        .getLocation().getPath();
+//    			LogRecord.RunningInfoLogger.info("path="+path);
+                tpath = path.substring(0, path.indexOf("WEB-INF"));
+//			    LogRecord.RunningInfoLogger.info("tpath="+tpath);
+                docPath = tpath + "WEB-INF/classes/FileConfig.xml";
+                doc = builder.build(docPath);
+                LogRecord.RunningInfoLogger.info("SystemConfig=" + docPath);
             }
             // 单独放置在API系统里面是下面的代码，在文件系统中是上面的代码
             // InputStream in = this.getClass().getResourceAsStream(
