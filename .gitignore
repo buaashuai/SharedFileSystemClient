@@ -1,5 +1,10 @@
 .idea
 .settings
+.classpath
+.project
+bin
+lib
+target
 *.iml
 *.classpath
 *.project

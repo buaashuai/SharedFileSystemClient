@@ -639,6 +639,7 @@ public class FileAdapter extends Adapter {
 							+ "/" + fileName);
 				}
 				feedback.addFeedbackInfo("repeat",false);
+				feedback.addFeedbackInfo("accessUrl",serverNode.URL);
 			} else {
 				feedback = new Feedback(3001, "");
 			}
