@@ -320,7 +320,7 @@ public class ConfigParse {
 //    			LogRecord.RunningInfoLogger.info("path="+path);
                 tpath = path.substring(0, path.indexOf("WEB-INF"));
 //			    LogRecord.RunningInfoLogger.info("tpath="+tpath);
-                docPath = tpath + "WEB-INF/classes/FileConfig.xml";
+                docPath = tpath + "WEB-INF/classes/SystemConfig.xml";
                 doc = builder.build(docPath);
                 LogRecord.RunningInfoLogger.info("SystemConfig=" + docPath);
             }

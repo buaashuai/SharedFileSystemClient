@@ -27,7 +27,7 @@ public class Config {
 	 * false 表示部署阶段
 	 * </p>
 	 */
-	public static final RuntimeType runtimeType = RuntimeType.LINUX;
+	public static final RuntimeType runtimeType = RuntimeType.CLIENT;
 	/**
 	 * 资源目录名的前导符
 	 * <p>
