@@ -403,12 +403,12 @@ public class FileAdapter extends Adapter {
 			if (!CommonUtil.isRemoteServer(ip)) {// 保存到本地
 				File newFile = new File(fullPath);
 				newFile.createNewFile();
-				byte[] bs = new byte[1024*1024];// 1Mb
+				byte[] bs = new byte[1024];// 1Kb，如果改大会使文件变大（文件末尾会填充空字符）
 				int len = stream2.read(bs);
 				outputStream = new FileOutputStream(newFile);
 				while (len > 0) {
 					outputStream.write(bs);
-					bs = new byte[1024*1024];// 1Mb
+					bs = new byte[1024];// 1Kb
 					len = stream2.read(bs);
 				}
 			} else {// 保存到远程服务器

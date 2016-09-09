@@ -439,7 +439,7 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.isFileExistTest();
+        test2.configTest();
 //        test2.memoryPerformanceTest(1, 2000);
 //       test2.generateFileTest(1,1024*1, "E:/test/1KB_2GB/1MB");
 //        test2.hdfsWritePerformanceTest("256"+"MB");
