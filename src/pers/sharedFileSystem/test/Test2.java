@@ -73,26 +73,26 @@ public class Test2 {
 //        System.out.println(re);
 
 //        FileAdapter fileAdapter2 = new FileAdapter("temp", "2.jpg", map);
-        for(int i=1;i<=10;i++) {
-            String name=i+".jpg";
-            inputStream = new FileInputStream(new File(
-                    "E:/图片视频/2.jpg"));
-            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
-//            map.put("activityId", ""+i);
-            JSONObject re = fileAdapter.saveFileTo("eventActivityAlbum",
-                    i+"-"+i+".jpg", map);
-            System.out.println(re);
-        }
-//        for(int i=2;i<=3;i++) {
+//        for(int i=1;i<=4;i++) {
 //            String name=i+".jpg";
 //            inputStream = new FileInputStream(new File(
 //                    "E:/图片视频/"+name));
-//            fileAdapter = new FileAdapter(inputStream);
-////            map.put("fileSuffix","txt");
-//            JSONObject re = fileAdapter.saveFileTo("temp",
+//            fileAdapter = new FileAdapter(inputStream, map);
+////            map.put("activityId", ""+i);
+//            JSONObject re = fileAdapter.saveFileTo("hallType",
 //                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
+        for(int i=2;i<=3;i++) {
+            String name=i+".jpg";
+            inputStream = new FileInputStream(new File(
+                    "E:/图片视频/"+name));
+            fileAdapter = new FileAdapter(inputStream, map);
+//            map.put("fileSuffix","txt");
+            JSONObject re = fileAdapter.saveFileTo("temp",
+                    i+"-"+i+".jpg", map);
+            System.out.println(re);
+        }
 //        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);
 //        JSONObject re2 = fileAdapter2.saveFileTo("temp",
 //                "3.jpg", map);
@@ -439,7 +439,7 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.isFileExistTest();
+        test2.saveFileToTest();
 //        test2.memoryPerformanceTest(1, 2000);
 //       test2.generateFileTest(1,1024*1, "E:/test/1KB_2GB/1MB");
 //        test2.hdfsWritePerformanceTest("256"+"MB");
