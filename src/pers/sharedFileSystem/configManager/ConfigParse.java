@@ -47,15 +47,6 @@ public class ConfigParse {
         RedundancyInfo redundancyInfo = new RedundancyInfo();
         redundancyInfo.Switch = element.getAttributeValue("switch")
                 .equals("on") ? true : false;
-        String maxElement = element.getChildText("maxElement");
-        String falsePositiveRate = element.getChildText("falsePositiveRate");
-        if (CommonUtil.validateString(maxElement)) {
-            redundancyInfo.MaxElementNum = Double.parseDouble(maxElement);
-        }
-        if (CommonUtil.validateString(falsePositiveRate)) {
-            redundancyInfo.FalsePositiveRate = Double
-                    .parseDouble(falsePositiveRate);
-        }
         Element figure = element.getChild("fingerGenType");
         if (figure != null) {
             if (figure.getAttributeValue("type").equals(
@@ -140,21 +131,6 @@ public class ConfigParse {
     }
 
     /**
-     *
-     * @param element backupNode节点的dom对象
-     * @return 解析之后的BackupNode对象
-     */
-    private BackupNode parseBackupNode(Element element){
-        BackupNode backupNode=new BackupNode();
-        backupNode.Ip = element.getChildText("ip");
-        backupNode.Port = Integer.parseInt(element.getChildText("port"));
-        backupNode.ServerPort = Integer.parseInt(element.getChildText("serverPort"));
-        backupNode.Id = element.getAttributeValue("id");
-        backupNode.UserName = element.getChildText("userName");
-        backupNode.Password = element.getChildText("password");
-        return backupNode;
-    }
-    /**
      * 对配置文件中的ServerNode节点进行解析
      *
      * @param element serverNode 节点的dom对象
@@ -163,7 +139,6 @@ public class ConfigParse {
     private ServerNode parseServerNode(Element element) {
         ServerNode serverNode = new ServerNode();
         Hashtable<String, DirectoryNode> directoryNodeTable = new Hashtable<String, DirectoryNode>();
-        Hashtable<String, BackupNode>backupNodeTable = new Hashtable<String, BackupNode>();
         serverNode.Ip = element.getChildText("ip");
         serverNode.Port = Integer.parseInt(element.getChildText("port"));
         serverNode.ServerPort = Integer.parseInt(element.getChildText("serverPort"));
@@ -174,7 +149,6 @@ public class ConfigParse {
         serverNode.URL = element.getChildText("url");
         serverNode.isRunning=true;
         List<Element> e_directoryNodes = element.getChildren("directoryNode");
-        List<Element> e_backupNodes = element.getChildren("backupNode");
         List<DirectoryNode> childNodes = new ArrayList<DirectoryNode>();
         for (Element e : e_directoryNodes) {
             DirectoryNode directoryNode = new DirectoryNode();
@@ -183,17 +157,7 @@ public class ConfigParse {
                     serverNode,"",serverNode);
             childNodes.add(directoryNode);
         }
-        String backupNodeId="";
-        for(Element e:e_backupNodes){
-            BackupNode backupNode=parseBackupNode(e);
-            //第一个备份节点为默认备份节点
-            if(backupNodeId=="")
-                backupNodeId=backupNode.Id;
-            backupNodeTable.put(backupNode.Id,backupNode);
-        }
-        serverNode.BackupNodeId=backupNodeId;
         serverNode.DirectoryNodeTable = directoryNodeTable;
-        serverNode.BackupNodeTable=backupNodeTable;
         serverNode.ChildNodes = childNodes;
         return serverNode;
     }
@@ -267,10 +231,6 @@ public class ConfigParse {
             DirectoryNode dNode=(DirectoryNode)node;
             if(dNode.Redundancy.Switch) {
                 serverRedundancy.Switch = true;
-                //最大存储元素数累加
-                serverRedundancy.MaxElementNum += dNode.Redundancy.MaxElementNum;
-                //误报率取子节点中的最小值
-                serverRedundancy.FalsePositiveRate = Math.min(serverRedundancy.FalsePositiveRate, dNode.Redundancy.FalsePositiveRate);
                 return;
             }
         }

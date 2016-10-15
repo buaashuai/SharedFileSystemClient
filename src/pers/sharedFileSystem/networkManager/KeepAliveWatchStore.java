@@ -2,6 +2,7 @@ package pers.sharedFileSystem.networkManager;
 
 import pers.sharedFileSystem.communicationObject.MessageProtocol;
 import pers.sharedFileSystem.communicationObject.MessageType;
+import pers.sharedFileSystem.entity.SenderType;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class KeepAliveWatchStore implements Runnable {
 				try {
 					MessageProtocol queryMessage = new MessageProtocol();
 					queryMessage.messageType = MessageType.KEEP_ALIVE;
+					queryMessage.senderType= SenderType.CLIENT;
 					FileSystemClient.sendMessageToStoreServer(serverNodeId,queryMessage);
 					lastSendTime=System.currentTimeMillis();
 					LogRecord.RunningInfoLogger.info("send handshake to storeServer [ "+serverNodeId+" ]");

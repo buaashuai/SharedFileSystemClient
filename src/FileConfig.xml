@@ -21,12 +21,9 @@
 		<userName>WangShuai</userName><!-- 该服务器的登录用户名 Administrator-->
 		<password>0987654321</password><!-- 该服务器的登录密码 C:/Users/dell/Desktop/temp-->
 		<url>http://www.xxx.com</url><!--该服务器的http访问路径-->
-		<storageRatio>0.8</storageRatio>
 		<directoryNode id="tempStoreNode" storePath="E:/ftp"><!--该服务器的存储根路径 -->
 			<directoryNode id="temp" nameType="static" name="temp"><!--缓存文件夹 -->
 				<redundancy switch="on"><!--是否进行文件删冗 -->
-					<maxElement>50000000</maxElement><!--最大元素数 -->
-					<falsePositiveRate>0.00001</falsePositiveRate><!--误报率 -->
 					<fingerGenType type="server"><!--指纹产生方式 -->
 						<property>fingerPrint</property><!--指纹映射属性名 -->
 					</fingerGenType>
@@ -36,25 +33,19 @@
 				</whiteList>
 			</directoryNode>
 			<directoryNode id="temp2" nameType="static" name="temp2"><!--缓存文件夹 -->
-				<redundancy switch="off"><!--是否进行文件删冗 -->
-					<maxElement>50000000</maxElement><!--最大元素数 -->
-					<falsePositiveRate>0.00001</falsePositiveRate><!--误报率 -->
+				<redundancy switch="on"><!--是否进行文件删冗 -->
 					<fingerGenType type="server"><!--指纹产生方式 -->
 						<property>fingerPrint</property><!--指纹映射属性名 -->
 					</fingerGenType>
 				</redundancy>
 				<whiteList><!--该节点可以接收文件的白名单 -->
-					JPEG,GIF,PNG,BMP16,BMP24,BMP256,FLV,ASF,AVI,MOV,MPG,MP4,WMV,DOC,DOCX,PDF,XML,TXT,JPG
+					ANY
 				</whiteList>
-				<directoryNode id="category1" nameType="static" name="Category"><!--栏目事件文件夹 -->
-					<directoryNode id="categoryId1" nameType="dynamic" property="categoryId"><!--某个栏目 -->
-						<directoryNode id="event1" nameType="dynamic" property="eventId"><!--栏目包括的事件 -->
-							<directoryNode id="eventActivity1" nameType="dynamic" property="activityId"><!--事件活动 -->
-								<directoryNode id="eventActivityAlbum1" nameType="static" name="ActivityAlbum"></directoryNode><!--活动相册 -->
-							</directoryNode>
-						</directoryNode>
-					</directoryNode>
-				</directoryNode>
+			</directoryNode>
+		</directoryNode>
+		<directoryNode id="renderStoreNode2222222" storePath="D:/ftp23424"><!--该服务器的存储根路径 -->
+			<directoryNode id="renderConfig" nameType="static" name="RenderConfig"><!-- 官方场景配置文件 -->
+				<directoryNode id="hallType" nameType="dynamic" property="hallTypeId"></directoryNode><!--官方的场景对应的灵堂配置文件 -->
 			</directoryNode>
 		</directoryNode>
 	</serverNode>
@@ -70,8 +61,6 @@
 		<directoryNode id="renderStoreNode" storePath="E:/ftp"><!--该服务器的存储根路径 -->
 			<directoryNode id="renderConfig" nameType="static" name="RenderConfig"><!-- 官方场景配置文件 -->
 				<redundancy switch="on"><!--是否进行文件删冗 -->
-					<maxElement>50000000</maxElement><!--最大元素数 -->
-					<falsePositiveRate>0.00001</falsePositiveRate><!--误报率 -->
 					<fingerGenType type="server"><!--指纹产生方式 -->
 						<property>fingerPrint</property><!--指纹映射属性名 -->
 					</fingerGenType>
@@ -96,8 +85,6 @@
 		<directoryNode id="fileStoreNode" storePath="e:/ftpServer"><!--该服务器的存储根路径 -->
 			<directoryNode id="filePath" nameType="static" name="OlineSacrificeFiles"><!--网祭平台文件根目录 -->
 				<redundancy switch="off"><!--是否进行文件删冗  on | off-->
-					<maxElement>50000000</maxElement><!--最大元素数 -->
-					<falsePositiveRate>0.00001</falsePositiveRate><!--误报率 -->
 					<fingerGenType type="server"><!--指纹产生方式 server | client-->
 						<property>fingerPrint</property><!--指纹映射属性名 -->
 					</fingerGenType>

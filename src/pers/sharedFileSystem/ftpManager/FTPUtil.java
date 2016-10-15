@@ -9,7 +9,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 
 import pers.sharedFileSystem.configManager.Config;
-import pers.sharedFileSystem.entity.BackupNode;
 import pers.sharedFileSystem.entity.ServerNode;
 import pers.sharedFileSystem.logManager.LogRecord;
 
@@ -68,14 +67,6 @@ public class FTPUtil {
 			port=serverNode.Port;
 			userName=serverNode.UserName;
 			pass= serverNode.Password;
-		}else{
-			BackupNode backupNode = serverNode.BackupNodeTable.get(serverNode.BackupNodeId);
-			if(backupNode!=null) {
-				ip = backupNode.Ip;
-				port = backupNode.Port;
-				userName = backupNode.UserName;
-				pass = backupNode.Password;
-			}
 		}
 		if (type)
 			return getFTPClient(ip, port,userName,pass);

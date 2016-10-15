@@ -3,6 +3,7 @@ package pers.sharedFileSystem.networkManager;
 import java.io.IOException;
 import pers.sharedFileSystem.communicationObject.MessageProtocol;
 import pers.sharedFileSystem.communicationObject.MessageType;
+import pers.sharedFileSystem.entity.SenderType;
 import pers.sharedFileSystem.logManager.LogRecord;
 
 /**
@@ -34,6 +35,7 @@ public class KeepAliveWatchRedundancy implements Runnable {
 				try {
 					MessageProtocol queryMessage = new MessageProtocol();
 					queryMessage.messageType = MessageType.KEEP_ALIVE;
+					queryMessage.senderType= SenderType.CLIENT;
 					FileSystemClient.sendMessageToRedundancyServer(queryMessage);
 					lastSendTime=System.currentTimeMillis();
 					LogRecord.RunningInfoLogger.info("send handshake to redundancyServer");

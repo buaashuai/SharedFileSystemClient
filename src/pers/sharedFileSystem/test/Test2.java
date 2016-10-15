@@ -83,13 +83,13 @@ public class Test2 {
 //                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
-        for(int i=2;i<=3;i++) {
+        for(int i=1;i<=3;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream, map);
 //            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp",
+            JSONObject re = fileAdapter.saveFileTo("temp2",
                     i+"-"+i+".jpg", map);
             System.out.println(re);
         }
@@ -222,7 +222,7 @@ public class Test2 {
      */
     private void configTest() throws Exception {
         Hashtable<String, ServerNode> config = Config.getConfig();
-        ServerNode serverNode = config.get("storeNode");
+        ServerNode serverNode = config.get("tempNode");
         serverNode.print("");
         System.out.println("*****************");
         SystemConfig systemConfig = Config.SYSTEMCONFIG;
