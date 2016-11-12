@@ -48,7 +48,7 @@ public class DirectoryAdapter extends Adapter {
             return;
         }
         DirectoryNode node = (DirectoryNode)n;
-        String desNodeId2=CommonUtil.getDestDirectoryNode(node,parms,false);//获取保存文件的实际结点编号
+        String desNodeId2=AdvancedFileUtil.getDestDirectoryNode(node, parms);//获取保存文件的实际结点编号
         if(!desNodeId2.equals(nodeId)) {
             nodeId=desNodeId2;//重定向到新的目录结点
         }

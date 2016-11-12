@@ -461,6 +461,10 @@ public class FileAdapter extends Adapter {
 	 */
 	public JSONObject saveFileTo(String desNodeId, String fileName,
 								 Map<String, String> parms) {
+		if(parms.containsKey("EXPAND_FLAG")){
+			LogRecord.FileHandleInfoLogger.info("resave to "+desNodeId);
+			return null;
+		}
 		Feedback feedback = null;
 		String fingerPrint ="";
 		Node n=Config.getNodeByNodeId(desNodeId);
@@ -470,9 +474,11 @@ public class FileAdapter extends Adapter {
 			return feedback.toJsonObject();
 		}
 		DirectoryNode node = (DirectoryNode)n;// 保存文件的目的节点
-		String desNodeId2=CommonUtil.getDestDirectoryNode(node, parms,true);//获取保存文件的实际结点编号
-		if(!desNodeId2.equals(desNodeId))
-			return saveFileTo(desNodeId2,fileName,parms);//重定向到新的目录结点
+		String desNodeId2=AdvancedFileUtil.getDestDirectoryNode(node, parms);//获取保存文件的实际结点编号
+		if(!desNodeId2.equals(desNodeId)) {
+			parms.put("EXPAND_FLAG", "1");//表示原始存储目录结点被扩容的标记
+			return saveFileTo(desNodeId2, fileName, parms);//重定向到新的目录结点
+		}
 
 		ServerNode serverNode = node.getServerNode();// 保存文件的目的节点所属的根节点
 		// 初始化节点的相对路径

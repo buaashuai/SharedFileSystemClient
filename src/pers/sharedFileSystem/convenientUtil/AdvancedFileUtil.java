@@ -2,13 +2,18 @@ package pers.sharedFileSystem.convenientUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Map;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
+import pers.sharedFileSystem.communicationObject.MessageProtocol;
+import pers.sharedFileSystem.communicationObject.MessageType;
 import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.ftpManager.FTPUtil;
 import pers.sharedFileSystem.logManager.LogRecord;
@@ -287,6 +292,32 @@ public class AdvancedFileUtil {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * 首先判断目录结点是否需要扩容，然后返回实际需要保存的结点编号信息
+	 * @param node 源目的结点
+	 * @return
+	 */
+	public static  String getDestDirectoryNode(DirectoryNode node,Map<String, String> parms){
+		String destNodeId=node.Id;//默认保存到当前结点
+		// 判断目录结点是否需要扩容
+		ServerNode serverNode=node.getServerNode();
+		Feedback reply = FileSystemClient.sendIfExpandMessage(serverNode.Id);
+		if(reply.getErrorcode() == 3000 && reply.getFeedbackInfo("expandInfo").equals("1")){// 需要扩容
+			LogRecord.FileHandleInfoLogger.info("["+destNodeId+"] need to expand");
+			// 向集群管理服务器发送给某个存储目录结点扩容的指令
+			Feedback reply2 = FileSystemClient.sendExpandMessage(node.Id);
+			if(reply2.getErrorcode() == 3000) {
+				String expandDirectoryNodeId = reply2.getFeedbackInfo("ExpandDirectoryNodeInfo").toString();
+				destNodeId = expandDirectoryNodeId;
+			}else{
+				LogRecord.FileHandleErrorLogger.error("all disk are full");
+			}
+		}else{
+			LogRecord.FileHandleInfoLogger.info("["+destNodeId+"] is idle");
+		}
+		return  destNodeId;
 	}
 
 }

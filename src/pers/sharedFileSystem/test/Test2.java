@@ -83,14 +83,14 @@ public class Test2 {
 //                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
-        for(int i=1;i<=3;i++) {
+        for(int i=1;i<=1;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream, map);
 //            map.put("fileSuffix","txt");
             JSONObject re = fileAdapter.saveFileTo("temp2",
-                    i+"-"+i+".jpg", map);
+                    i+"-"+new Random(System.currentTimeMillis()).nextLong()+".jpg", map);
             System.out.println(re);
         }
 //        FileAdapter fileAdapter2 = new FileAdapter("categoryId", "3.jpg", map);

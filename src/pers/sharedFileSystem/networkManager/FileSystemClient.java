@@ -48,8 +48,8 @@ public class FileSystemClient {
     public static void restartConnectToStoreServer(String serverNodeId){
         try {
             ServerNode serverNode=fileConfig.get(serverNodeId);
-            LogRecord.RunningErrorLogger.error("attempt to reconnect to store server. [ "+serverNode.Ip+" : "+serverNode.Port+" ]");
-            Socket so = new Socket(serverNode.Ip, serverNode.Port);
+            LogRecord.RunningErrorLogger.error("attempt to reconnect to store server. [ "+serverNode.Ip+" : "+serverNode.ServerPort+" ]");
+            Socket so = new Socket(serverNode.Ip, serverNode.ServerPort);
             storeSockets.put(serverNodeId,so);
         } catch (IOException e) {
             e.printStackTrace();
@@ -68,7 +68,7 @@ public class FileSystemClient {
                         KeepAliveWatchRedundancy k1 = new KeepAliveWatchRedundancy();
                         Thread t1 = new Thread(k1);
                         t1.start();
-                        LogRecord.RunningInfoLogger.info("connect to RudundancyServer successful. [ "+sysConf.Ip+" : "+sysConf.Port+" ]");
+                        LogRecord.RunningInfoLogger.info("connect to RudundancyServer successful. [ "+sysConf.Ip+":"+sysConf.Port+" ]");
                         isRudundancyStarted = true;
                     }
                     Socket sk=new Socket(sn.Ip, sn.ServerPort);
@@ -77,7 +77,7 @@ public class FileSystemClient {
                     t2.start();
                     //保存该长连接
                     storeSockets.put(sn.Id,sk);
-                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+" : "+sn.ServerPort+" ]");
+                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+":"+sn.ServerPort+" ]");
                 }
             }
         } catch (Exception e) {
@@ -120,6 +120,9 @@ public class FileSystemClient {
                 if(replyMessage.messageType==MessageType.REPLY_CHECK_REDUNDANCY) {
                     FingerprintInfo fInfo=(FingerprintInfo)replyMessage.content;
                     feedback.addFeedbackInfo("FingerprintInfo",fInfo);
+                }else if(replyMessage.messageType==MessageType.REPLY_GET_EXPAND_DIRECTORY){
+                    String expandDirectoryNodeId = replyMessage.content.toString();
+                    feedback.addFeedbackInfo("ExpandDirectoryPath",expandDirectoryNodeId);
                 }
                 return feedback;
             }
@@ -129,6 +132,10 @@ public class FileSystemClient {
             }
             case 4002:{
                 feedback = new Feedback(3015 ,"");
+                return feedback;
+            }
+            case 4010:{
+                feedback = new Feedback(3027 ,"");
                 return feedback;
             }
             default:{
@@ -149,10 +156,12 @@ public class FileSystemClient {
                 if(replyMessage.messageType==MessageType.REPLY_GET_REDUNDANCY_INFO) {
                     ArrayList<FingerprintInfo>fingerprintInfos=(ArrayList<FingerprintInfo>)replyMessage.content;
                     feedback.addFeedbackInfo("otherPath",fingerprintInfos);
-                }
-                if(replyMessage.messageType==MessageType.REPLY_VALIDATE_FILENAMES) {
+                } else if(replyMessage.messageType==MessageType.REPLY_VALIDATE_FILENAMES) {
                     ArrayList<FingerprintInfo>fingerprintInfos=(ArrayList<FingerprintInfo>)replyMessage.content;
                     feedback.addFeedbackInfo("validateFiles",fingerprintInfos);
+                }else if(replyMessage.messageType==MessageType.REPLY_IF_DIRECTORY_NEED_EXPAND) {
+                    String reply=replyMessage.content.toString();
+                    feedback.addFeedbackInfo("expandInfo",reply);
                 }
                 return feedback;
             }
@@ -225,6 +234,12 @@ public class FileSystemClient {
             }
             case REPLY_VALIDATE_FILENAMES:{
                 return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_IF_DIRECTORY_NEED_EXPAND:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_GET_EXPAND_DIRECTORY:{
+                return parseReplyFromRedundancyServer(replyMessage);
             }
             default:{
                 return null;
@@ -420,6 +435,55 @@ public class FileSystemClient {
             sendMessageToStoreServer(serverNodeId,queryMessage);
             Socket so=storeSockets.get(serverNodeId);
             ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送判断目录结点是否需要扩容
+     * @param serverNodeId
+     *            存储服务器编号
+     */
+    public static Feedback sendIfExpandMessage(String serverNodeId){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.IF_DIRECTORY_NEED_EXPAND;
+            queryMessage.senderType = SenderType.CLIENT;
+            queryMessage.content="";
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向集群管理子系统发送给某个存储目录结点扩容的指令
+     * @param directoryNodeId
+     *            待扩容的存储目录结点编号
+     */
+    public static Feedback sendExpandMessage(String directoryNodeId){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.GET_EXPAND_DIRECTORY;
+            queryMessage.senderType = SenderType.CLIENT;
+            queryMessage.content=directoryNodeId;
+            sendMessageToRedundancyServer(queryMessage);
+            ObjectInputStream ois = new ObjectInputStream(socket.getInputStream());
             MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
             if (replyMessage != null) {
                 return parseMessage(replyMessage);
