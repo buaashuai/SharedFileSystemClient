@@ -6,6 +6,7 @@ import java.util.Map;
 
 import net.sf.json.JSONObject;
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.configManager.Constant;
 import pers.sharedFileSystem.entity.DirectoryNode;
 import pers.sharedFileSystem.entity.Feedback;
 import pers.sharedFileSystem.entity.FileType;
@@ -175,6 +176,10 @@ public class CommonFileUtil {
                     return feedback.toJsonObject();
                 }
             }
+        }
+        if(parms.containsKey("EXPAND_FLAG")){
+            String expandDirName = Constant.ExpandNodePrefix+ parms.get("PREDIR");
+            orignPath += "/"+expandDirName;
         }
         generateFilePath(node, orignPath,operationInfo);
         if (absoluteOrRelative)

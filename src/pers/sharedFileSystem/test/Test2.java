@@ -89,7 +89,7 @@ public class Test2 {
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream, map);
 //            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("temp2",
+            JSONObject re = fileAdapter.saveFileTo("temp",
                     i+"-"+new Random(System.currentTimeMillis()).nextLong()+".jpg", map);
             System.out.println(re);
         }
@@ -181,7 +181,7 @@ public class Test2 {
         map.put("activityId", "1");
         map.put("eventId", "1");
         map.put("categoryId", "1");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("eventActivityAlbum", map);
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp", map);
         List<String> fileNames = dicAdapter.getAllFileNames();
         System.out.println(fileNames);
     }
@@ -199,8 +199,8 @@ public class Test2 {
         map.put("activityId", "1");
         map.put("eventId", "1");
         map.put("categoryId", "1");
-        DirectoryAdapter dicAdapter = new DirectoryAdapter("eventActivityAlbum", map);
-        JSONArray re = dicAdapter.getAllFile();
+        DirectoryAdapter dicAdapter = new DirectoryAdapter("temp2", map);
+        JSONArray re = dicAdapter.getAllFilePaths();
 //        ArrayList<String> re2 = dicAdapter.getAllFileNames();
 //        JSONArray re3 = dicAdapter.getAllFile();
 //        ArrayList<String> paths = new ArrayList<String>();
@@ -439,7 +439,8 @@ public class Test2 {
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.saveFileToTest();
+        test2.getAllFilePathsTest();
+        test2.getAllFileNamesTest();
 //        test2.memoryPerformanceTest(1, 2000);
 //       test2.generateFileTest(1,1024*1, "E:/test/1KB_2GB/1MB");
 //        test2.hdfsWritePerformanceTest("256"+"MB");

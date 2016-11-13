@@ -294,6 +294,7 @@ public class ConfigParse {
         SystemConfig systemConfig = new SystemConfig();
         systemConfig.Port = Integer.parseInt(element.getChildText("port"));
         systemConfig.Ip = element.getChildText("ip");
+        systemConfig.Expand = element.getChildText("expand").equals("on");
         Config.SYSTEMCONFIG = systemConfig;
     }
 }

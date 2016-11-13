@@ -13,7 +13,7 @@ import java.io.IOException;
  */
 public class KeepAliveWatchStore implements Runnable {
 	private long checkDelay = 500;//线程多久循环一次
-	private long keepAliveDelay = 3000;//握手协议发送时间间隔
+	private long keepAliveDelay = 20000;//握手协议发送时间间隔（毫秒）
 	private boolean run;// 线程是否运行
 	private long lastSendTime;//上次发送时间
 	private String serverNodeId;//存储服务器id

@@ -12,7 +12,7 @@ import pers.sharedFileSystem.logManager.LogRecord;
  */
 public class KeepAliveWatchRedundancy implements Runnable {
 	private long checkDelay = 500;//线程多久循环一次
-	private long keepAliveDelay = 3000;//握手协议发送时间间隔
+	private long keepAliveDelay = 20000;//握手协议发送时间间隔（毫秒）
 	private boolean run;// 线程是否运行
 	private long lastSendTime;//上次发送时间
 

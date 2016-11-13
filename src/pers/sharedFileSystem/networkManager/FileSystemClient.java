@@ -122,7 +122,7 @@ public class FileSystemClient {
                     feedback.addFeedbackInfo("FingerprintInfo",fInfo);
                 }else if(replyMessage.messageType==MessageType.REPLY_GET_EXPAND_DIRECTORY){
                     String expandDirectoryNodeId = replyMessage.content.toString();
-                    feedback.addFeedbackInfo("ExpandDirectoryPath",expandDirectoryNodeId);
+                    feedback.addFeedbackInfo("ExpandDirectoryNodeInfo",expandDirectoryNodeId);
                 }
                 return feedback;
             }
@@ -162,6 +162,9 @@ public class FileSystemClient {
                 }else if(replyMessage.messageType==MessageType.REPLY_IF_DIRECTORY_NEED_EXPAND) {
                     String reply=replyMessage.content.toString();
                     feedback.addFeedbackInfo("expandInfo",reply);
+                }else if(replyMessage.messageType==MessageType.REPLY_GET_EXPAND_FILE_STORE_INFO) {
+                    ArrayList<String>reply=(ArrayList<String>)replyMessage.content;
+                    feedback.addFeedbackInfo("expandNodeList",reply);
                 }
                 return feedback;
             }
@@ -191,6 +194,14 @@ public class FileSystemClient {
             }
             case 4009:{
                 feedback = new Feedback(3026 ,"");
+                return feedback;
+            }
+            case 4011:{
+                feedback = new Feedback(3029 ,"");
+                return feedback;
+            }
+            case 4012:{
+                feedback = new Feedback(3028 ,"");
                 return feedback;
             }
             default:{
@@ -240,6 +251,12 @@ public class FileSystemClient {
             }
             case REPLY_GET_EXPAND_DIRECTORY:{
                 return parseReplyFromRedundancyServer(replyMessage);
+            }
+            case REPLY_ADD_EXPAND_INFO:{
+                return parseReplyFromStoreServer(replyMessage);
+            }
+            case REPLY_GET_EXPAND_FILE_STORE_INFO:{
+                return parseReplyFromStoreServer(replyMessage);
             }
             default:{
                 return null;
@@ -396,6 +413,56 @@ public class FileSystemClient {
         return feedback;
     }
     /**
+     * 向存储服务器发送添加扩容结点信息
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param expandFileStoreInfo 扩容结点信息
+     */
+    public static Feedback sendAddExpandMessage(String serverNodeId, ExpandFileStoreInfo expandFileStoreInfo){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.ADD_EXPAND_INFO;
+            queryMessage.content=expandFileStoreInfo;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
+     * 向存储服务器发送获取某个结点的扩容结点信息
+     * @param serverNodeId
+     *            存储服务器编号
+     * @param directoryNodeId 结点信息
+     */
+    public static Feedback sendGetExpandInfoMessage(String serverNodeId, String directoryNodeId){
+        Feedback feedback = null;
+        try {
+            MessageProtocol queryMessage = new MessageProtocol();
+            queryMessage.messageType = MessageType.GET_EXPAND_FILE_STORE_INFO;
+            queryMessage.content=directoryNodeId;
+            sendMessageToStoreServer(serverNodeId,queryMessage);
+            Socket so=storeSockets.get(serverNodeId);
+            ObjectInputStream ois = new ObjectInputStream(so.getInputStream());
+            MessageProtocol replyMessage = (MessageProtocol) ois.readObject();
+            if (replyMessage != null) {
+                return parseMessage(replyMessage);
+            }
+        } catch (Exception e) {
+            LogRecord.RunningErrorLogger.error(e.toString());
+        }
+        feedback = new Feedback(3001 ,"");
+        return feedback;
+    }
+    /**
      * 向存储服务器发送删除文件引用频率指令
      * @param serverNodeId
      *            存储服务器编号
@@ -445,6 +512,7 @@ public class FileSystemClient {
         feedback = new Feedback(3001 ,"");
         return feedback;
     }
+
     /**
      * 向存储服务器发送判断目录结点是否需要扩容
      * @param serverNodeId

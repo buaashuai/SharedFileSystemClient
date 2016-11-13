@@ -14,6 +14,10 @@ public class SystemConfig {
      */
     public String Ip;
 
+    /**
+     * 是否支持扩容
+     */
+    public boolean Expand = false;
     public SystemConfig(){
 
     }
@@ -26,5 +30,6 @@ public class SystemConfig {
     public void print(String tabs) {
         System.out.println(tabs + "Port: " + Port);
         System.out.println(tabs + "Ip: " + Ip);
+        System.out.println(tabs + "Expand: " + Expand);
     }
 }

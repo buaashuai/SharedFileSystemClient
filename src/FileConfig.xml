@@ -33,7 +33,7 @@
 				</whiteList>
 			</directoryNode>
 			<directoryNode id="temp2" nameType="static" name="temp2"><!--缓存文件夹 -->
-				<redundancy switch="on"><!--是否进行文件删冗 -->
+				<redundancy switch="off"><!--是否进行文件删冗 -->
 					<fingerGenType type="server"><!--指纹产生方式 -->
 						<property>fingerPrint</property><!--指纹映射属性名 -->
 					</fingerGenType>
@@ -46,6 +46,36 @@
 		<directoryNode id="renderStoreNode2222222" storePath="D:/ftp23424"><!--该服务器的存储根路径 -->
 			<directoryNode id="renderConfig" nameType="static" name="RenderConfig"><!-- 官方场景配置文件 -->
 				<directoryNode id="hallType" nameType="dynamic" property="hallTypeId"></directoryNode><!--官方的场景对应的灵堂配置文件 -->
+			</directoryNode>
+		</directoryNode>
+	</serverNode>
+
+	<serverNode id="tempNode189"><!-- 缓存服务器节点 -->
+		<ip>10.2.8.189</ip><!--节点存储位置(本地/远程服务器) 192.168.192.100-->
+		<port>21</port><!--ftp端口-->
+		<serverPort>9996</serverPort><!--该服务器上的文件系统端口-->
+		<userName>WangShuai</userName><!-- 该服务器的登录用户名 Administrator-->
+		<password>0987654321</password><!-- 该服务器的登录密码 C:/Users/dell/Desktop/temp-->
+		<url>http://10.2.8.189</url><!--该服务器的http访问路径-->
+		<directoryNode id="tempNode189_d1" storePath="E:/wwwRoot"><!--该服务器的存储根路径 -->
+			<redundancy switch="on"><!--是否进行文件删冗 -->
+				<fingerGenType type="server"><!--指纹产生方式 -->
+					<property>fingerPrint</property><!--指纹映射属性名 -->
+				</fingerGenType>
+			</redundancy>
+			<directoryNode id="tempNode189_d1_d2" nameType="static" name="RenderConfig"><!-- 官方场景配置文件 -->
+			</directoryNode>
+		</directoryNode>
+		<directoryNode id="tempStoreNode189" storePath="E:/wwwRoot"><!--该服务器的存储根路径 -->
+			<directoryNode id="temp189_2" nameType="static" name="temp2"><!--缓存文件夹 -->
+				<redundancy switch="off"><!--是否进行文件删冗 -->
+					<fingerGenType type="server"><!--指纹产生方式 -->
+						<property>fingerPrint</property><!--指纹映射属性名 -->
+					</fingerGenType>
+				</redundancy>
+				<whiteList><!--该节点可以接收文件的白名单 -->
+					JPEG,GIF,PNG,BMP16,BMP24,BMP256,FLV,ASF,AVI,MOV,MPG,MP4,WMV,DOC,DOCX,PDF,XML,TXT
+				</whiteList>
 			</directoryNode>
 		</directoryNode>
 	</serverNode>
@@ -75,7 +105,7 @@
 
 	
 	<serverNode id="storeNode"><!-- 文件存储服务器节点 -->
-		<ip>10.2.8.188</ip><!--节点存储位置(本地/远程服务器) 192.168.192.100-->
+		<ip>127.0.0.1</ip><!--节点存储位置(本地/远程服务器) 192.168.192.100-->
 		<port>21</port><!--ftp端口-->
 		<serverPort>9998</serverPort><!--该服务器上的文件系统端口-->
 		<userName>1709</userName><!-- 该服务器的登录用户名 -->

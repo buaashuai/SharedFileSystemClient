@@ -8,10 +8,12 @@ import java.util.*;
 import com.sun.corba.se.spi.activation.Server;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.configManager.Constant;
 import pers.sharedFileSystem.convenientUtil.AdvancedFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonFileUtil;
 import pers.sharedFileSystem.convenientUtil.CommonUtil;
@@ -48,10 +50,6 @@ public class DirectoryAdapter extends Adapter {
             return;
         }
         DirectoryNode node = (DirectoryNode)n;
-        String desNodeId2=AdvancedFileUtil.getDestDirectoryNode(node, parms);//获取保存文件的实际结点编号
-        if(!desNodeId2.equals(nodeId)) {
-            nodeId=desNodeId2;//重定向到新的目录结点
-        }
         ServerNode rootNode = node.getServerNode();
         // DirectoryAdapter.rootNode = rootNode;
         this.PARM=parms;
@@ -135,6 +133,21 @@ public class DirectoryAdapter extends Adapter {
                 files.addAll(otherPath);
             }
         }
+        if(Config.SYSTEMCONFIG.Expand) {// 如果系统支持扩容，还需要获取扩容目录中的文件
+            Feedback feedback2=FileSystemClient.sendGetExpandInfoMessage(serverNode.Id,this.NODEID);
+            if(feedback2.getErrorcode()==3000) {
+                ArrayList<String> expandNodeList = (ArrayList<String>) feedback2.getFeedbackInfo("expandNodeList");
+                for(String nodeId : expandNodeList){
+                    Map<String, String> parms = new HashedMap();
+                    parms.putAll(this.PARM);
+                    parms.put("EXPAND_FLAG", "1");//表示原始存储目录结点被扩容的标记
+                    parms.put("PREDIR", this.NODEID);
+                    DirectoryAdapter directoryAdapter = new DirectoryAdapter(nodeId, parms);
+                    JSONArray tmp = directoryAdapter.getAllFilePaths();
+                    files.addAll(tmp);
+                }
+            }
+        }
         JSONArray result=JSONArray.fromObject(files);
         //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
 //        if(this.NODE.NameType==NodeNameType.STATIC ) {
@@ -209,15 +222,21 @@ public class DirectoryAdapter extends Adapter {
                 files.addAll(otherPath);
             }
         }
-        //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
-//        if(this.NODE.NameType==NodeNameType.STATIC ) {
-//            List<IntervalProperty> Intervals=this.NODE.Intervals;
-//            if(Intervals.size()>0) {
-//                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
-//                ArrayList<String> other=dicAdapter.getAllFileNames();
-//                fileNames.addAll(other);
-//            }
-//        }
+        if(Config.SYSTEMCONFIG.Expand) {// 如果系统支持扩容，还需要获取扩容目录中的文件
+            Feedback feedback2=FileSystemClient.sendGetExpandInfoMessage(serverNode.Id,this.NODEID);
+            if(feedback2.getErrorcode()==3000) {
+                ArrayList<String> expandNodeList = (ArrayList<String>) feedback2.getFeedbackInfo("expandNodeList");
+                for(String nodeId : expandNodeList){
+                    Map<String, String> parms = new HashedMap();
+                    parms.putAll(this.PARM);
+                    parms.put("EXPAND_FLAG", "1");//表示原始存储目录结点被扩容的标记
+                    parms.put("PREDIR", this.NODEID);
+                    DirectoryAdapter directoryAdapter = new DirectoryAdapter(nodeId, parms);
+                    ArrayList<String> tmp = directoryAdapter.getAllFileNames();
+                    fileNames.addAll(tmp);
+                }
+            }
+        }
         for(FingerprintInfo info:files){
             fileNames.add(info.getFileName());
         }
@@ -304,16 +323,24 @@ public class DirectoryAdapter extends Adapter {
         }
         files.addAll(dirFiles);
 
+        if(Config.SYSTEMCONFIG.Expand) {// 如果系统支持扩容，还需要获取扩容目录中的文件
+            Feedback feedback2=FileSystemClient.sendGetExpandInfoMessage(serverNode.Id,this.NODEID);
+            if(feedback2.getErrorcode()==3000) {
+                ArrayList<String> expandNodeList = (ArrayList<String>) feedback2.getFeedbackInfo("expandNodeList");
+                for(String nodeId : expandNodeList){
+                    Map<String, String> parms = new HashedMap();
+                    parms.putAll(this.PARM);
+                    parms.put("EXPAND_FLAG", "1");//表示原始存储目录结点被扩容的标记
+                    parms.put("PREDIR", this.NODEID);
+                    DirectoryAdapter directoryAdapter = new DirectoryAdapter(nodeId, parms);
+                    JSONArray tmp = directoryAdapter.getAllFile();
+                    files.addAll(tmp);
+                }
+            }
+        }
+
         JSONArray result=JSONArray.fromObject(files);
-        //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
-//        if(this.NODE.NameType==NodeNameType.STATIC ) {
-//            List<IntervalProperty> Intervals=this.NODE.Intervals;
-//            if(Intervals.size()>0) {
-//                DirectoryAdapter dicAdapter = new DirectoryAdapter(Intervals.get(0).DirectoryNodeId, parms);
-//                JSONArray other=dicAdapter.getAllFile();
-//                result.addAll(other);
-//            }
-//        }
+
         return result;
     }
 
