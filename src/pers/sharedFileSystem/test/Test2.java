@@ -8,14 +8,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.fs.*;
+import pers.sharedFileSystem.communicationObject.ExpandFileStoreInfo;
+import pers.sharedFileSystem.communicationObject.MessageProtocol;
+import pers.sharedFileSystem.communicationObject.MessageType;
 import pers.sharedFileSystem.configManager.Config;
+import pers.sharedFileSystem.configManager.Constant;
 import pers.sharedFileSystem.convenientUtil.CommonUtil;
 import pers.sharedFileSystem.convenientUtil.SHA1_MD5;
 import pers.sharedFileSystem.communicationObject.FingerprintInfo;
-import pers.sharedFileSystem.entity.Feedback;
-import pers.sharedFileSystem.entity.FileType;
-import pers.sharedFileSystem.entity.ServerNode;
-import pers.sharedFileSystem.entity.SystemConfig;
+import pers.sharedFileSystem.entity.*;
 import pers.sharedFileSystem.logManager.LogRecord;
 import pers.sharedFileSystem.networkManager.FileSystemClient;
 import pers.sharedFileSystem.shareInterface.DirectoryAdapter;
@@ -84,13 +85,13 @@ public class Test2 {
 //                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
-        for(int i=1;i<=1;i++) {
+        for(int i=2;i<=2;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
                     "E:/图片视频/"+name));
             fileAdapter = new FileAdapter(inputStream, map);
 //            map.put("fileSuffix","txt");
-            JSONObject re = fileAdapter.saveFileTo("tempNode188_a1_d1",
+            JSONObject re = fileAdapter.saveFileTo("temp189_a2_d1",
                     i+"-"+new Random(System.currentTimeMillis()).nextLong()+".jpg", map);
             System.out.println(re);
         }
@@ -103,6 +104,7 @@ public class Test2 {
 //        } else {
 //            System.out.println("success");
 //        }
+        System.exit(0);
     }
 
     /**
@@ -120,15 +122,14 @@ public class Test2 {
         map.put("categoryId", "1");
 //        DirectoryAdapter dicAdapter = new DirectoryAdapter("hallType", map);
         List<String> fileNames = new ArrayList<String>();
-        fileNames.add("1-1.jpg");
-        fileNames.add("3-3.jpg");
+        fileNames.add("2.jpg");
 //        JSONObject re1 = dicAdapter.deleteSelective(fileNames);
 //        System.out.println(re1);
 //	fileNames.add("24.txt");
 //	FileAdapter fileAdapter = new FileAdapter("temp2",
 //			"2-2.jpg", map);
-	FileAdapter fileAdapter2 = new FileAdapter("temp2",
-			"", map);
+	FileAdapter fileAdapter2 = new FileAdapter("temp189_a2_d1",
+			"5-1768200017239600802.jpg", map);
 
 	JSONObject re2 =fileAdapter2.delete();
 	System.out.println(re2);
@@ -650,6 +651,60 @@ public class Test2 {
         System.out.println("endend");
     }
 
+    /**
+     * 指令大小测试
+     */
+    private void commandSizeTest(){
+        MessageProtocol queryMessage = new MessageProtocol();
+        queryMessage.messageType = MessageType.GET_EXPAND_DIRECTORY;
+        queryMessage.senderType = SenderType.CLIENT;
+        queryMessage.content="123123123123";
+
+        FileOutputStream fout=null;
+        ObjectOutputStream sout =null;
+        String filePath="E:/MFCSS";//结点扩容信息文件的保存路径
+        String fileName="command.sys";
+        String tempFileName="tmp_command.sys";
+        if(!CommonUtil.validateString(filePath)){
+            LogRecord.FileHandleErrorLogger.error("save command error, filePath is null.");
+        }
+        File file = new File(filePath);
+        if (!file.exists() && !file.isDirectory()) {
+            LogRecord.RunningErrorLogger.error("save command error, filePath illegal.");
+        }
+        File oldFile=new File(filePath+"/"+fileName);
+        File tempFile=new File(filePath+"/"+ tempFileName);
+        if(oldFile.exists()){
+            oldFile.renameTo(tempFile);
+        }
+
+        try{
+            fout = new FileOutputStream(filePath + "/" + fileName, true);
+                sout = new ObjectOutputStream(fout);
+                sout.writeObject(queryMessage);
+            LogRecord.RunningInfoLogger.info("save command successful. ");
+        }catch (FileNotFoundException e){
+            e.printStackTrace();
+        }catch (IOException e){
+            e.printStackTrace();
+            File newFile=new File(filePath+"/"+fileName);
+            newFile.delete();
+            tempFile.renameTo(newFile);
+        }finally {
+            try {
+                //删除临时文件
+                if(tempFile.exists()){
+                    tempFile.delete();
+                }
+                if(fout!=null)
+                    fout.close();
+                if(sout!=null)
+                    sout.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
@@ -672,9 +727,11 @@ public class Test2 {
 //            System.out.println("time: "+tmp);
 //        }
 //        System.out.println(total/10);
-            test2.concurrenceTest(20,3);
+//            test2.concurrenceTest(20,3);
 
-//            test2.saveFileToTest();
+            test2.saveFileToTest();
+//            test2.commandSizeTest();
+//            test2.deleteFileTest();
 //       test2.genFingerpringTest(150000, "E:/test/md5_150000.txt");
 //        test2.readMd5FromFile("E:/test/md5_150000.txt");
 //       test2.generateFileTest(50,1024*1, "E:/test/1MB_50");

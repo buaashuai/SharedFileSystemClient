@@ -82,7 +82,7 @@
 					</fingerGenType>
 				</redundancy>
 				<whiteList><!--该节点可以接收文件的白名单 -->
-					JPEG,GIF,PNG,BMP16,BMP24,BMP256,FLV,ASF,AVI,MOV,MPG,MP4,WMV,DOC,DOCX,PDF,XML,TXT
+					JPEG,GIF,PNG,BMP16,BMP24,BMP256,FLV,ASF,AVI,MOV,MPG,MP4,WMV,DOC,DOCX,PDF,XML,TXT,JPG
 				</whiteList>
 			</directoryNode>
 		</directoryNode>
