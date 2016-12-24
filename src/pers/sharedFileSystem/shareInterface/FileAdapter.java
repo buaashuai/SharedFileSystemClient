@@ -543,6 +543,7 @@ public class FileAdapter extends Adapter {
 //					fileName += "." + fileType.toString();
 //			}
 
+            long redundancyUsedTime = 0;
 			if (node.Redundancy.Switch) {//如果上传的节点需要进行文件删冗
 				// 布隆过滤器置位
 				if(node.Redundancy.FingerGenType== FingerGenerateType.CLIENT) {
@@ -567,8 +568,12 @@ public class FileAdapter extends Adapter {
 					LogRecord.FileHandleInfoLogger.info("generate new md5:"+fingerPrint);
 				}
 				FingerprintInfo fInfo=new FingerprintInfo(fingerPrint,fileType);
+				long starTime=System.currentTimeMillis();// 毫秒
 				Feedback re=FileSystemClient.isFileExistInBloomFilter(fInfo);
-				if(re.getErrorcode() == 3000){//表示指纹信息存在
+                long endTime=System.currentTimeMillis();// 毫秒
+                redundancyUsedTime=endTime-starTime;
+//                LogRecord.FileHandleInfoLogger.info("冗余检测耗时(毫秒)["+fileName+"]: "+redundancyUsedTime);
+                if(re.getErrorcode() == 3000){//表示指纹信息存在
 					//给客户端返回文件存储的位置
 					//re.getJSONArray("Info").getString(0).substring(node.StorePath.length());//strP是相对路径
 					re.addFeedbackInfo("repeat",true);
@@ -624,14 +629,17 @@ public class FileAdapter extends Adapter {
 					Feedback re2=FileSystemClient.sendAddFingerprintInfoMessage(serverNode.Id, fInfo);//向存储服务器发送添加指纹信息指令
 					if(re.getErrorcode() != 3000){
 						feedback = new Feedback(3017, "");
+                        feedback.addFeedbackInfo("redundancyUsedTime", redundancyUsedTime);
 						return feedback.toJsonObject();
 					}
 					if(re2.getErrorcode() != 3000){
 						feedback = new Feedback(3020, "");
+                        feedback.addFeedbackInfo("redundancyUsedTime", redundancyUsedTime);
 						return feedback.toJsonObject();
 					}
 				}
 				feedback = new Feedback(3000, "");
+                feedback.addFeedbackInfo("redundancyUsedTime", redundancyUsedTime);
 				if(parms.containsKey("EXPAND_FLAG")){
 					String preDir = parms.get("PREDIR");
 					Node nn=Config.getNodeByNodeId(preDir);

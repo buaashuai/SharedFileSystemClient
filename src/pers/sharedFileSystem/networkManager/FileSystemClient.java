@@ -71,13 +71,18 @@ public class FileSystemClient {
                         LogRecord.RunningInfoLogger.info("connect to RudundancyServer successful. [ "+sysConf.Ip+":"+sysConf.Port+" ]");
                         isRudundancyStarted = true;
                     }
-                    Socket sk=new Socket(sn.Ip, sn.ServerPort);
-                    KeepAliveWatchStore ks=new KeepAliveWatchStore(sn.Id);
-                    Thread t2 = new Thread(ks);
-                    t2.start();
-                    //保存该长连接
-                    storeSockets.put(sn.Id,sk);
-                    LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ "+sn.Ip+":"+sn.ServerPort+" ]");
+                    try {
+                        Socket sk = new Socket(sn.Ip, sn.ServerPort);
+                        KeepAliveWatchStore ks = new KeepAliveWatchStore(sn.Id);
+                        Thread t2 = new Thread(ks);
+                        t2.start();
+                        //保存该长连接
+                        storeSockets.put(sn.Id, sk);
+                        LogRecord.RunningInfoLogger.info("connect to StoreServer successful. [ " + sn.Ip + ":" + sn.ServerPort + " ]");
+                    }catch (Exception ee){
+                        LogRecord.RunningErrorLogger.error("fail connect to ["+ sn.Ip + ":" + sn.ServerPort + " ]");
+                        LogRecord.RunningErrorLogger.error(ee.toString());
+                    }
                 }
             }
         } catch (Exception e) {
