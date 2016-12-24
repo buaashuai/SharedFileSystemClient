@@ -83,7 +83,7 @@ public class Test2 {
 //                    i+"-"+i+".jpg", map);
 //            System.out.println(re);
 //        }
-        for(int i=1;i<=1;i++) {
+        for(int i=1;i<=2;i++) {
             String name=i+".jpg";
             inputStream = new FileInputStream(new File(
                     "E:/图片视频/"+name));
@@ -385,19 +385,20 @@ public class Test2 {
      * 系统读性能测试
      */
     private void readPerformanceTest() throws IOException {
-        String path="E:/test/5MB_100MB";
+        String path="E:/test/1KB_10000";
         InputStream inputStream =null;
         FileAdapter fileAdapter = null;
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("hallTypeId", "1992");
-        map.put("fileSuffix", "txt");
+//        map.put("fileSuffix", "txt");
         byte[] buf = new byte[1024];//1KB
-        for(int i=5;i<=100;i+=5) {
+        for(int i=1;i<=5;i++) {
             long starTime=System.currentTimeMillis();
             buf = new byte[1024];
             String name="m"+i+".txt";
-            fileAdapter = new FileAdapter("renderConfig",
+            fileAdapter = new FileAdapter("temp2",
                     name, map);
+            System.out.println(fileAdapter.FILEPATH);
 //            inputStream=fileAdapter.getFileInputStream();
 //            inputStream.read(buf);
 //            inputStream.close();
@@ -407,7 +408,30 @@ public class Test2 {
             System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
         }
     }
-
+    /**
+     * 系统写文件响应时间测试
+     */
+    private void writePerformanceTest() throws IOException {
+        String path="E:/test/1KB_10000";
+        InputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("hallTypeId", "1992");
+//        map.put("fileSuffix", "txt");
+        byte[] buf = new byte[1024];//1KB
+        for(int i=1;i<=5;i++) {
+            long starTime=System.currentTimeMillis();
+            buf = new byte[1024];
+            String name="m"+i+".txt";
+            fileAdapter = new FileAdapter("temp2",
+                    name, map);
+            fileAdapter.saveFileTo("temp3", name, map);
+            long endTime=System.currentTimeMillis();
+            long time=endTime-starTime;
+            double timeSpan=(double)time/1000;
+            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
+        }
+    }
     /**
      * 内存利用率测试
      */
@@ -420,7 +444,6 @@ public class Test2 {
         map.put("fileSuffix", "txt");
         for(int i=start;i<=end;i++) {
             long starTime=System.currentTimeMillis();
-
             String name="m"+i+".txt";
             inputStream =  new FileInputStream(new File(
                     path+"/"+name));
@@ -431,17 +454,53 @@ public class Test2 {
             long endTime=System.currentTimeMillis();
             long time=endTime-starTime;
             double timeSpan=(double)time/1000;
-//            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
+            System.out.println("time [ "+name+" ]: "+timeSpan+" 秒");
         }
+
     }
 
-
+    /**
+     * MPM测试
+     */
+    private long memoryMPMTest(int start, int end) throws FileNotFoundException {
+        String path="E:/test/1KB_10000";
+        FileInputStream inputStream =null;
+        FileAdapter fileAdapter = null;
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("hallTypeId", "1992");
+        map.put("fileSuffix", "txt");
+        inputStream =  new FileInputStream(new File(
+                path+"/m1.txt"));
+        fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
+        fileAdapter.getFileInputStream();
+        long starTime=System.currentTimeMillis();
+        for(int i=start;i<=end;i++) {
+            String name="m"+i+".txt";
+            inputStream =  new FileInputStream(new File(
+                    path+"/"+name));
+            fileAdapter = new FileAdapter(inputStream, new HashMap<String, String>());
+            fileAdapter.getFileInputStream();
+//            JSONObject re = fileAdapter.saveFileTo("renderConfig",
+//                    name, map);
+        }
+        long endTime=System.currentTimeMillis();
+        long time=endTime-starTime;
+        return time;
+    }
     public static void main(String[] args) throws Exception {
         // TODO Auto-generated method stub
         Test2 test2 = new Test2();
-        test2.getAllFilePathsTest();
-        test2.getAllFileNamesTest();
-//        test2.memoryPerformanceTest(1, 2000);
+//        test2.getAllFilePathsTest();
+//        test2.getAllFileNamesTest();
+//        test2.readPerformanceTest();
+//        test2.writePerformanceTest();
+        long total = 0;
+        for(int i=0; i <10; i++) {
+            long tmp=test2.memoryMPMTest(1, 10000);
+            total+=tmp;
+            System.out.println("time: "+tmp);
+        }
+        System.out.println(total/10);
 //       test2.generateFileTest(1,1024*1, "E:/test/1KB_2GB/1MB");
 //        test2.hdfsWritePerformanceTest("256"+"MB");
 //        test2.deleteHdfsFile();

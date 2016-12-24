@@ -8,7 +8,6 @@
 		<userName>WangShuai</userName><!-- 该服务器的登录用户名 Administrator-->
 		<password>0987654321</password><!-- 该服务器的登录密码 C:/Users/dell/Desktop/temp-->
 		<url>http://www.xxx.com</url><!--该服务器的http访问路径-->
-		<storageRatio>0.8</storageRatio>
 		<directoryNode id="tempStoreNode2" storePath="E:/test/1KB_2GB/2MB"><!--该服务器的存储根路径 -->
 
 		</directoryNode>
@@ -41,6 +40,8 @@
 				<whiteList><!--该节点可以接收文件的白名单 -->
 					ANY
 				</whiteList>
+			</directoryNode>
+			<directoryNode id="temp3" nameType="static" name="temp3"><!--缓存文件夹 -->
 			</directoryNode>
 		</directoryNode>
 		<directoryNode id="renderStoreNode2222222" storePath="D:/ftp23424"><!--该服务器的存储根路径 -->

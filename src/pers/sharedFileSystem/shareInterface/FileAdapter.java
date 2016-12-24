@@ -330,6 +330,8 @@ public class FileAdapter extends Adapter {
 	public InputStream getFileInputStream(String encoding) {
 		try {
 			Node n = new Node();
+            if(n.Id==null)
+                return inputStream;
 			if (n instanceof DirectoryNode) {
 			}
 			ServerNode serverNode = this.NODE.getServerNode();
