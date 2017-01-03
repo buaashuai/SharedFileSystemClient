@@ -2,5 +2,5 @@
 <SystemConfig>
 	<ip>127.0.0.1</ip><!--冗余验证服务器ip-->
 	<port>9998</port><!--冗余验证服务器的监听端口-->
-	<expand>on</expand><!--是否支持扩容-->
+	<expand>on</expand><!--是否支持扩容 on | off -->
 </SystemConfig>

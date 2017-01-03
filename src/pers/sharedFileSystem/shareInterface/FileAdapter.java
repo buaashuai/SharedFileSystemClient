@@ -329,11 +329,11 @@ public class FileAdapter extends Adapter {
 	 */
 	public InputStream getFileInputStream(String encoding) {
 		try {
-			Node n = new Node();
-            if(n.Id==null)
-                return inputStream;
-			if (n instanceof DirectoryNode) {
-			}
+//			Node n = new Node();
+//            if(n.Id==null)
+//                return inputStream;
+//			if (n instanceof DirectoryNode) {
+//			}
 			ServerNode serverNode = this.NODE.getServerNode();
 			String ip = serverNode.Ip;
 			if (!CommonUtil.isRemoteServer(ip))

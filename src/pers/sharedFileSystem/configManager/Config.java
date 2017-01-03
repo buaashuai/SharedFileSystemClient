@@ -23,8 +23,8 @@ public class Config {
 	/**
 	 * 标记此文件系统是处于调试阶段还是部署阶段
 	 * <p>
-	 * true 表示调试阶段<br/>
-	 * false 表示部署阶段
+	 * DEBUG 表示调试阶段<br/>
+	 * CLIENT 表示部署阶段，即打包成客户端 jar 形式
 	 * </p>
 	 */
 	public static final RuntimeType runtimeType = RuntimeType.DEBUG;

@@ -108,7 +108,7 @@ public class AdvancedFileUtil {
 			}
 		} else {
 			FTPClient ftpClient = FTPUtil.getFTPClientByServerNode(serverNode,
-					false);
+					true);
 			try {
 				String relativePath = route.substring(directoryNode.StorePath.length());
 				boolean flag=ftpClient.changeWorkingDirectory(relativePath);//new String(relativePath.getBytes(),"ISO-8859-1")
