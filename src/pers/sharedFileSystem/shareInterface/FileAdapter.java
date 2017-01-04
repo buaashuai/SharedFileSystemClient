@@ -596,6 +596,7 @@ public class FileAdapter extends Adapter {
 						re.setErrorcode(3018);
 					if(re3.getErrorcode() != 3000)
 						re.setErrorcode(3022);
+					re.addFeedbackInfo("accessUrl",s2.URL+ff.getFilePath()+ff.getFileName());
 					return re.toJsonObject();
 				}else{
 					LogRecord.RunningInfoLogger.info(re.toString());
@@ -662,23 +663,24 @@ public class FileAdapter extends Adapter {
 				}else{
 					feedback.addFeedbackInfo("resave",false);
 				}
-
+				String relativeAccessPath;
 				if(jsonArray.size()>0) {
-					feedback.addFeedbackInfo(jsonArray.getString(0) + "/"
-							+ fileName);// fileName已经带有后缀名
+					relativeAccessPath=jsonArray.getString(0) + "/"
+							+ fileName;
+					feedback.addFeedbackInfo(relativeAccessPath);// fileName已经带有后缀名
 					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
-							+ jsonArray.getString(0) + "/" + fileName);
+							+ relativeAccessPath);
 				}
 				else {
-					feedback.addFeedbackInfo("/"
-							+ fileName);// fileName已经带有后缀名
+					relativeAccessPath = "/" + fileName;
+					feedback.addFeedbackInfo(relativeAccessPath);// fileName已经带有后缀名
 					LogRecord.FileHandleInfoLogger.info(this.getOperationInfo()+"save file successful: "
 							+ serverNode.Ip + "/" + node.StorePath
 							+ "/" + fileName);
 				}
 				feedback.addFeedbackInfo("repeat",false);
-				feedback.addFeedbackInfo("accessUrl",serverNode.URL);
+				feedback.addFeedbackInfo("accessUrl",serverNode.URL+relativeAccessPath);
 			} else {
 				feedback = new Feedback(3001, "");
 			}

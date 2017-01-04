@@ -78,6 +78,7 @@ public class DirectoryAdapter extends Adapter {
      */
     public JSONArray getAllFilePaths() {
         ArrayList<FingerprintInfo> files = new ArrayList<FingerprintInfo>();
+        ArrayList<FileInfo> result = new ArrayList<FileInfo>();
         ServerNode serverNode = this.NODE.getServerNode();
         String relativePath = this.FILEPATH.substring( this.NODE.StorePath.length());
         if (!CommonUtil.isRemoteServer(serverNode.Ip)) {
@@ -94,7 +95,10 @@ public class DirectoryAdapter extends Adapter {
                         fInfo.setFilePath(this.RELATIVE_FILEPATH);
                         fInfo.setNodeId(this.NODE.Id);
                         fInfo.setFileName(readfile.getName());
+                        FileInfo fileInfo = new FileInfo(fInfo);
+                        fileInfo.setAccessUrl(serverNode.URL+this.RELATIVE_FILEPATH+readfile.getName());
                         files.add(fInfo);
+                        result.add(fileInfo);
                     }
                 }
             }
@@ -112,7 +116,10 @@ public class DirectoryAdapter extends Adapter {
                         fInfo.setFilePath(this.RELATIVE_FILEPATH);
                         fInfo.setNodeId(this.NODE.Id);
                         fInfo.setFileName(f.getName());
+                        FileInfo fileInfo = new FileInfo(fInfo);
+                        fileInfo.setAccessUrl(serverNode.URL+this.RELATIVE_FILEPATH+f.getName());
                         files.add(fInfo);
+                        result.add(fileInfo);
                     }
                 }
             } catch (Exception e) {
@@ -130,6 +137,11 @@ public class DirectoryAdapter extends Adapter {
             Feedback feedback= FileSystemClient.sendGetRedundancyInfo(serverNode.Id,relativePath+ "/" );
             if(feedback.getErrorcode()==3000) {//表示存在冗余文件
                 ArrayList<FingerprintInfo> otherPath = (ArrayList<FingerprintInfo>) feedback.getFeedbackInfo("otherPath");
+                for(FingerprintInfo finfo: otherPath){
+                    FileInfo fileInfo = new FileInfo(finfo);
+                    fileInfo.setAccessUrl(Config.getNodeByNodeId(finfo.getNodeId()).getServerNode().URL+fileInfo.getFilePath()+finfo.getFileName());
+                    result.add(fileInfo);
+                }
                 files.addAll(otherPath);
             }
         }
@@ -144,11 +156,11 @@ public class DirectoryAdapter extends Adapter {
                     parms.put("PREDIR", this.NODEID);
                     DirectoryAdapter directoryAdapter = new DirectoryAdapter(nodeId, parms);
                     JSONArray tmp = directoryAdapter.getAllFilePaths();
-                    files.addAll(tmp);
+                    result.addAll(tmp);
                 }
             }
         }
-        JSONArray result=JSONArray.fromObject(files);
+        JSONArray result_final=JSONArray.fromObject(result);
         //如果是文件夹具有扩展属性，还需要获取扩展的文件夹里面的文件内容
 //        if(this.NODE.NameType==NodeNameType.STATIC ) {
 //            List<IntervalProperty> Intervals=this.NODE.Intervals;
@@ -158,7 +170,7 @@ public class DirectoryAdapter extends Adapter {
 //                result.addAll(other);
 //            }
 //        }
-        return result;
+        return result_final;
     }
 
     /**
